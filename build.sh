@@ -5,7 +5,7 @@
 set -e  # エラーが発生したら即座に終了
 
 echo "=== 依存ライブラリをインストール ==="
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 echo "=== 初期データを投入 ==="
 # seed.py は冪等に作られていること（既存データがあれば何もしない）
