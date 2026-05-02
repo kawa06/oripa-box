@@ -153,6 +153,35 @@ oripa-gacha/
 
 ---
 
+## Render.com へのデプロイ
+
+### デプロイ手順
+
+1. [Render.com](https://render.com) にサインインし、**New → Blueprint** を選択
+2. GitHub リポジトリ `kawa06/oripa-box` を連携する
+3. `render.yaml` が自動検出され、サービスが作成される
+4. **Environment** タブで以下の環境変数を手動設定する
+
+| 環境変数 | 説明 | 例 |
+|----------|------|----|
+| `SECRET_KEY` | JWT署名用秘密鍵（ランダムな文字列） | `openssl rand -hex 32` の出力 |
+| `STRIPE_SECRET_KEY` | Stripe秘密鍵 | `sk_live_...` |
+| `STRIPE_PUBLIC_KEY` | Stripe公開鍵 | `pk_live_...` |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Webhookシークレット | `whsec_...` |
+| `FRONTEND_URL` | デプロイ後のURL（Stripe リダイレクト先） | `https://oripa-gacha.onrender.com` |
+
+### SQLite に関する重要な注意事項
+
+> **警告**: Render.com の無料プランは **Ephemeral Filesystem（揮発性ファイルシステム）** を採用しています。  
+> サービスが再起動・再デプロイされるたびに `oripa_gacha.db` ファイルは**消去されます**。
+
+- **開発・テスト目的**: SQLite のままで問題ありません（デプロイごとに `build.sh` が seed を再実行します）
+- **本番運用**: Render の **PostgreSQL** アドオンへの移行を強く推奨します
+  - `DATABASE_URL` 環境変数に PostgreSQL の接続文字列を設定するだけで切り替え可能
+  - 例: `postgresql://user:password@host/dbname`
+
+---
+
 ## API エンドポイント一覧
 
 | Method | Path | 説明 | 認証 |

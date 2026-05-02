@@ -67,3 +67,11 @@ def get_config():
     return {
         "stripe_public_key": config.STRIPE_PUBLIC_KEY,
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Render.com は PORT 環境変数でポートを指定する
+    # ローカル開発時はデフォルトで 8000 番を使用
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=False)
