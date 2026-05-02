@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - パック一覧</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html" class="active">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- コイン残高表示 -->
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <!-- ログイン/ログアウトボタンエリア -->
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <!-- ページヘッダー -->
+    <div class="page-header fade-in">
+      <h1>オリパガチャ</h1>
+      <p>トレーディングカードのオリジナルパックを開封しよう！</p>
+    </div>
+
+    <!-- ヒーローバナー -->
+    <div style="
+      background: linear-gradient(135deg, #12122a, #1a1a4a, #2a1a5a);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 48px 32px;
+      text-align: center;
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    " class="fade-in">
+      <div style="
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+      "></div>
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 16px;">
+        レアカードをゲットしよう！
+      </h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 1.05rem;">
+        UR確率1%の超レアカードが登場。各パックは100口限定！
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="/frontend/gacha.html" class="btn btn-gold btn-lg">🎲 ガチャを引く</a>
+        <a href="/frontend/coins.html" class="btn btn-outline btn-lg">🪙 コインを購入</a>
+      </div>
+    </div>
+
+    <!-- レアリティ説明 -->
+    <div style="
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 48px;
+    ">
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+                  background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3);
+                  border-radius: 20px;">
+        <span style="color: var(--rarity-ur); font-weight: 800;">UR</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">1%</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+                  background: rgba(232, 121, 249, 0.1); border: 1px solid rgba(232, 121, 249, 0.3);
+                  border-radius: 20px;">
+        <span style="color: var(--rarity-ssr); font-weight: 800;">SSR</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">4%</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+                  background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3);
+                  border-radius: 20px;">
+        <span style="color: var(--rarity-sr); font-weight: 800;">SR</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">15%</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+                  background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
+                  border-radius: 20px;">
+        <span style="color: var(--rarity-r); font-weight: 800;">R</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">30%</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+                  background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3);
+                  border-radius: 20px;">
+        <span style="color: var(--rarity-n); font-weight: 800;">N</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">50%</span>
+      </div>
+    </div>
+
+    <!-- パック一覧 -->
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 24px;">
+      販売中のパック
+    </h2>
+    <div id="pack-grid" class="pack-grid">
+      <!-- JSで動的に挿入 -->
+      <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script>
+    // パック一覧を取得して表示するインラインスクリプト
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('pack-grid');
+
+      try {
+        const packs = await apiGet('/packs/');
+
+        if (packs.length === 0) {
+          container.innerHTML = '<p class="text-secondary text-center" style="grid-column: 1/-1;">現在販売中のパックはありません</p>';
+          return;
+        }
+
+        const packEmojis = {
+          'スタンダードパック': '🎴',
+          'プレミアムパック': '💎',
+          '限定コレクションパック': '🌟',
+        };
+
+        container.innerHTML = packs.map(pack => {
+          const emoji = packEmojis[pack.name] || '🃏';
+          const stockPercent = (pack.stock / pack.max_stock) * 100;
+          const isLow = stockPercent < 20;
+
+          return `
+            <div class="pack-card fade-in" onclick="window.location.href='/frontend/gacha.html?pack=${pack.id}'"
+                 style="cursor: pointer;">
+              <div class="pack-image">
+                <span>${emoji}</span>
+                ${pack.stock === 0 ? '<span class="badge-soldout">SOLD OUT</span>' : ''}
+              </div>
+              <div class="pack-body">
+                <h3 class="pack-name">${pack.name}</h3>
+                <p class="pack-description">${pack.description || ''}</p>
+                <div class="stock-bar">
+                  <div class="stock-bar-label">
+                    <span>残り在庫</span>
+                    <span>${pack.stock} / ${pack.max_stock}口 ${isLow ? '⚠️ 残りわずか' : ''}</span>
+                  </div>
+                  <div class="stock-bar-track">
+                    <div class="stock-bar-fill ${isLow ? 'low' : ''}"
+                         style="width: ${stockPercent}%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="pack-footer">
+                <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
+                ${pack.stock > 0
+                  ? `<a href="/frontend/gacha.html?pack=${pack.id}" class="btn btn-primary">引いてみる</a>`
+                  : `<button class="btn btn-outline" disabled>売り切れ</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; color: var(--error);">
+            <p>パックの読み込みに失敗しました</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">${err.message}</p>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

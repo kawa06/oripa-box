@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - ログイン / 新規登録</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+  </nav>
+
+  <div class="main-content">
+    <div class="auth-container fade-in">
+      <h1 class="auth-title">✦ オリパガチャ</h1>
+
+      <!-- タブ切り替え -->
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">ログイン</button>
+        <button class="tab-btn" id="tab-register" onclick="switchTab('register')">新規登録</button>
+      </div>
+
+      <!-- アラートメッセージ表示エリア（ログイン・登録で共用） -->
+      <div id="login-alert" class="alert"></div>
+      <div id="register-alert" class="alert"></div>
+
+      <!-- ログインフォーム -->
+      <div id="login-panel">
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">メールアドレス</label>
+            <input
+              type="email"
+              id="login-email"
+              class="form-input"
+              placeholder="example@email.com"
+              required
+              autocomplete="email"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">パスワード</label>
+            <input
+              type="password"
+              id="login-password"
+              class="form-input"
+              placeholder="パスワードを入力"
+              required
+              autocomplete="current-password"
+            >
+          </div>
+          <button type="submit" id="login-btn" class="btn btn-primary w-full btn-lg">
+            ログイン
+          </button>
+        </form>
+
+        <div class="auth-switch mt-16">
+          テストアカウント: <code style="color: var(--accent-gold);">test@example.com</code> /
+          <code style="color: var(--accent-gold);">test1234</code>
+        </div>
+      </div>
+
+      <!-- 新規登録フォーム -->
+      <div id="register-panel" class="hidden">
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label" for="reg-email">メールアドレス</label>
+            <input
+              type="email"
+              id="reg-email"
+              class="form-input"
+              placeholder="example@email.com"
+              required
+              autocomplete="email"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-username">ユーザー名</label>
+            <input
+              type="text"
+              id="reg-username"
+              class="form-input"
+              placeholder="ユーザー名を入力"
+              required
+              maxlength="20"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password">パスワード（6文字以上）</label>
+            <input
+              type="password"
+              id="reg-password"
+              class="form-input"
+              placeholder="パスワードを入力"
+              required
+              minlength="6"
+              autocomplete="new-password"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password-confirm">パスワード（確認）</label>
+            <input
+              type="password"
+              id="reg-password-confirm"
+              class="form-input"
+              placeholder="パスワードを再入力"
+              required
+              autocomplete="new-password"
+            >
+          </div>
+          <button type="submit" id="register-btn" class="btn btn-gold w-full btn-lg">
+            新規登録
+          </button>
+        </form>
+        <div class="auth-switch mt-16" style="color: var(--text-secondary); font-size: 0.85rem;">
+          ※登録すると50コインのボーナスを進呈します
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/auth.js"></script>
+</body>
+</html>

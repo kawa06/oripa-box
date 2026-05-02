@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - コイン購入</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/coins.html" class="active">コイン購入</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>コイン購入</h1>
+      <p>コインを購入してガチャを楽しもう</p>
+    </div>
+
+    <!-- アラート -->
+    <div id="coin-alert" class="alert" style="max-width: 700px; margin: 0 auto 24px;"></div>
+
+    <!-- 現在の残高 -->
+    <div style="
+      text-align: center;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 40px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    " class="fade-in">
+      <p style="color: var(--text-secondary); margin-bottom: 8px;">現在のコイン残高</p>
+      <p id="current-balance" style="font-size: 2.5rem; font-weight: 800; color: var(--accent-gold);">
+        <span class="spinner" style="width: 24px; height: 24px; display: inline-block;"></span>
+      </p>
+    </div>
+
+    <!-- コインパック選択 -->
+    <div style="max-width: 800px; margin: 0 auto;">
+      <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; text-align: center;">
+        コインパックを選択
+      </h2>
+
+      <div id="coin-pack-grid" class="coin-pack-grid">
+        <div class="flex-center" style="grid-column: 1 / -1; padding: 40px;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- 購入ボタン -->
+      <div style="text-align: center; margin-top: 32px;">
+        <button
+          id="purchase-btn"
+          class="btn btn-gold btn-lg"
+          disabled
+          style="min-width: 280px;"
+        >
+          コインパックを選択してください
+        </button>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px;">
+          Stripe Checkoutに移動して安全に決済できます
+        </p>
+      </div>
+
+      <!-- Stripe安全バッジ -->
+      <div style="
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        margin-top: 24px; color: var(--text-secondary); font-size: 0.8rem;
+      ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        SSL暗号化による安全な決済 | Stripe
+      </div>
+    </div>
+
+    <!-- コイン取引履歴 -->
+    <div style="max-width: 700px; margin: 56px auto 0;">
+      <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px;">
+        コイン取引履歴
+      </h2>
+      <div id="transaction-history">
+        <div class="flex-center" style="padding: 40px;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/coins.js"></script>
+</body>
+</html>

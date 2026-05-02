@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - ガチャを引く</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html" class="active">ガチャ</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>ガチャを引く</h1>
+      <p>パックを選んでガチャを実行しよう</p>
+    </div>
+
+    <!-- アラート -->
+    <div id="gacha-alert" class="alert" style="max-width: 600px; margin: 0 auto 24px;"></div>
+
+    <div class="gacha-area">
+      <!-- パック選択エリア -->
+      <section style="width: 100%;">
+        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary);">
+          1. パックを選択
+        </h2>
+        <div id="pack-selector-area" class="pack-grid">
+          <div class="flex-center" style="grid-column: 1 / -1; padding: 40px;">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ガチャ実行エリア -->
+      <section style="width: 100%; max-width: 400px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary); text-align: center;">
+          2. ガチャを引く
+        </h2>
+        <div class="gacha-action">
+          <p id="selected-pack-info" class="hidden" style="color: var(--accent-gold); font-weight: 600;"></p>
+          <button
+            id="gacha-btn"
+            class="btn btn-gold btn-lg"
+            disabled
+            style="width: 100%; font-size: 1.2rem; padding: 20px;"
+          >
+            パックを選択してください
+          </button>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
+            1回につき設定コインを消費します。1枚のカードが排出されます。
+          </p>
+          <a href="/frontend/coins.html" style="color: var(--accent-purple); font-size: 0.9rem; text-decoration: none;">
+            コインが不足していますか？ →購入する
+          </a>
+        </div>
+      </section>
+
+      <!-- ガチャ履歴 -->
+      <section style="width: 100%;">
+        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary);">
+          最近の結果
+        </h2>
+        <div id="gacha-history">
+          <div class="flex-center" style="padding: 24px;">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ガチャ開封ステージ（全画面オーバーレイ） -->
+  <div id="gacha-stage" class="gacha-stage">
+    <!-- JSで動的にカードと演出を挿入する -->
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/gacha.js"></script>
+  <script>
+    // URLパラメータでパックが指定されていれば自動選択する
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const packId = params.get('pack');
+      if (packId) {
+        // パック読み込み後に自動選択
+        const checkInterval = setInterval(() => {
+          const packCard = document.querySelector(`.pack-card[data-pack-id="${packId}"]`);
+          if (packCard) {
+            clearInterval(checkInterval);
+            selectPack(parseInt(packId), packCard);
+            packCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 200);
+        // 5秒で諦める
+        setTimeout(() => clearInterval(checkInterval), 5000);
+      }
+    });
+  </script>
+</body>
+</html>
