@@ -1691,6 +1691,8 @@ body {
 .gacha-stage-multi,
 .gacha-stage-100 {
   flex-direction: column;
+  /* 横方向も中央寄せを明示（flex-direction:column で align-items が横軸になる） */
+  align-items: center;
   gap: 0;
   overflow-y: auto;
   padding: 24px 16px;
@@ -1774,6 +1776,8 @@ body {
 @media (max-width: 600px) {
   .multi-cards-grid {
     grid-template-columns: repeat(2, 1fr);
+    /* スマホでもグリッドアイテムを中央寄せ */
+    justify-items: center;
     gap: 6px;
   }
 
