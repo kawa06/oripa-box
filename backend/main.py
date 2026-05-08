@@ -8,12 +8,31 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from backend.database import engine, Base
+from backend.database import engine, Base, SessionLocal
 from backend.routes import auth, gacha, coins, packs, admin, collection, exchange, ranking
-from backend import config
+from backend import config, models
 
 # テーブルが存在しない場合は自動作成
 Base.metadata.create_all(bind=engine)
+
+# SMTP未設定の環境では、既存ユーザーの is_verified を全件 True に更新する
+# （SMTPが設定されていない状態で登録したユーザーがログインできない問題を修正）
+if not config.SMTP_ENABLED:
+    _db = SessionLocal()
+    try:
+        updated_count = (
+            _db.query(models.User)
+            .filter(models.User.is_verified == False)
+            .update({"is_verified": True}, synchronize_session=False)
+        )
+        _db.commit()
+        if updated_count > 0:
+            print(f"[起動時マイグレーション] SMTP未設定のため {updated_count} 件のユーザーの is_verified を True に更新しました")
+    except Exception as e:
+        print(f"[起動時マイグレーション] エラー: {e}")
+        _db.rollback()
+    finally:
+        _db.close()
 
 # FastAPIアプリケーション作成
 app = FastAPI(

@@ -5,6 +5,7 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend import models, schemas
@@ -253,3 +254,40 @@ def get_me(current_user: models.User = Depends(get_current_user)):
     現在ログイン中のユーザー情報を取得する
     """
     return current_user
+
+
+class DeleteAccountRequest(BaseModel):
+    """アカウント削除リクエスト（パスワード確認用）"""
+    password: str
+
+
+@router.delete("/delete-account")
+def delete_account(
+    request: DeleteAccountRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    ログイン中のユーザーのアカウントを物理削除する
+    パスワードを確認してから、ユーザーに紐づく全データを削除する
+    """
+    # パスワード照合
+    if not verify_password(request.password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="パスワードが正しくありません"
+        )
+
+    user_id = current_user.id
+
+    # 関連データを順番に削除（外部キー制約に注意）
+    db.query(models.PityCounter).filter(models.PityCounter.user_id == user_id).delete()
+    db.query(models.UserCard).filter(models.UserCard.user_id == user_id).delete()
+    db.query(models.CoinTransaction).filter(models.CoinTransaction.user_id == user_id).delete()
+    db.query(models.GachaResult).filter(models.GachaResult.user_id == user_id).delete()
+
+    # ユーザー本体を削除
+    db.delete(current_user)
+    db.commit()
+
+    return {"message": "アカウントを削除しました"}

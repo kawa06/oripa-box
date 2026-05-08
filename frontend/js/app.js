@@ -131,6 +131,16 @@ function apiPost(path, body) {
   });
 }
 
+/**
+ * DELETE リクエスト
+ */
+function apiDelete(path, body) {
+  return apiCall(path, {
+    method: 'DELETE',
+    body: JSON.stringify(body),
+  });
+}
+
 // ===== UI ユーティリティ =====
 
 /**
@@ -185,12 +195,74 @@ async function updateNavbar() {
       coinDisplayEl.textContent = user.coin_balance;
       coinDisplayEl.closest('.coin-display')?.classList.remove('hidden');
     }
-    // ナビゲーション切り替え
+    // ナビゲーション切り替え（ユーザー名クリックでドロップダウン）
     if (navAuthArea) {
       navAuthArea.innerHTML = `
-        <span style="color: var(--text-secondary); font-size: 0.9rem;">${user.username}</span>
-        <button onclick="logout()" class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem;">ログアウト</button>
+        <div class="user-menu-wrapper" style="position: relative; display: inline-block;">
+          <button
+            id="user-menu-btn"
+            class="btn btn-outline"
+            style="padding: 6px 14px; font-size: 0.85rem; cursor: pointer;"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >${user.username} ▾</button>
+          <div
+            id="user-dropdown"
+            style="
+              display: none;
+              position: absolute;
+              right: 0;
+              top: calc(100% + 6px);
+              min-width: 160px;
+              background: var(--card-bg, #1e1b2e);
+              border: 1px solid var(--border-color, #3a3a5c);
+              border-radius: 8px;
+              box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+              z-index: 1000;
+              overflow: hidden;
+            "
+          >
+            <button
+              onclick="logout()"
+              style="
+                display: block; width: 100%; padding: 12px 16px;
+                background: none; border: none; color: var(--text-primary, #e2e8f0);
+                font-size: 0.9rem; text-align: left; cursor: pointer;
+              "
+              onmouseover="this.style.background='rgba(255,255,255,0.07)'"
+              onmouseout="this.style.background='none'"
+            >ログアウト</button>
+            <hr style="margin: 0; border-color: var(--border-color, #3a3a5c);">
+            <button
+              onclick="openDeleteAccountModal()"
+              style="
+                display: block; width: 100%; padding: 12px 16px;
+                background: none; border: none; color: #f87171;
+                font-size: 0.9rem; text-align: left; cursor: pointer;
+              "
+              onmouseover="this.style.background='rgba(248,113,113,0.1)'"
+              onmouseout="this.style.background='none'"
+            >アカウント削除</button>
+          </div>
+        </div>
       `;
+
+      // ドロップダウンのトグル処理
+      const menuBtn = document.getElementById('user-menu-btn');
+      const dropdown = document.getElementById('user-dropdown');
+      if (menuBtn && dropdown) {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = dropdown.style.display === 'block';
+          dropdown.style.display = isOpen ? 'none' : 'block';
+          menuBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+        // メニュー外クリックで閉じる
+        document.addEventListener('click', () => {
+          dropdown.style.display = 'none';
+          menuBtn.setAttribute('aria-expanded', 'false');
+        });
+      }
     }
 
     // 管理者の場合はナビに管理リンクを表示
@@ -233,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateNavbar();
   insertFooter();
   initHamburger();
+  insertDeleteAccountModal();
 });
 
 /**
@@ -289,4 +362,135 @@ function insertFooter() {
     <p class="footer-copy">&copy; 2025 オリパガチャ All Rights Reserved.</p>
   `;
   document.body.appendChild(footer);
+}
+
+// ===== アカウント削除モーダル =====
+
+/**
+ * アカウント削除確認モーダルをbodyに挿入する（全ページ共通）
+ */
+function insertDeleteAccountModal() {
+  if (document.getElementById('delete-account-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'delete-account-modal';
+  modal.style.cssText = `
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background: var(--card-bg, #1e1b2e);
+      border: 1px solid #f87171;
+      border-radius: 12px;
+      padding: 32px 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    ">
+      <h2 style="color: #f87171; font-size: 1.3rem; margin: 0 0 12px;">アカウント削除</h2>
+      <p style="color: var(--text-secondary, #a0aec0); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
+        本当にアカウントを削除しますか？<br>
+        この操作は取り消せません。コイン残高・カードコレクション・ガチャ履歴など、全てのデータが完全に削除されます。
+      </p>
+      <div id="delete-account-alert" class="alert" style="margin-bottom: 16px;"></div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" for="delete-account-password" style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-secondary, #a0aec0);">
+          確認のためパスワードを入力してください
+        </label>
+        <input
+          type="password"
+          id="delete-account-password"
+          class="form-input"
+          placeholder="パスワードを入力"
+          autocomplete="current-password"
+          style="font-size: 16px;"
+        >
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button
+          onclick="closeDeleteAccountModal()"
+          class="btn btn-outline"
+          style="padding: 10px 20px;"
+        >キャンセル</button>
+        <button
+          id="delete-account-confirm-btn"
+          onclick="handleDeleteAccount()"
+          style="
+            padding: 10px 20px;
+            background: #f87171;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >削除する</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+/**
+ * アカウント削除モーダルを開く
+ */
+function openDeleteAccountModal() {
+  const modal = document.getElementById('delete-account-modal');
+  if (!modal) return;
+  // パスワード入力欄とアラートをリセット
+  const pwInput = document.getElementById('delete-account-password');
+  if (pwInput) pwInput.value = '';
+  const alertEl = document.getElementById('delete-account-alert');
+  if (alertEl) alertEl.className = 'alert';
+  modal.style.display = 'flex';
+}
+
+/**
+ * アカウント削除モーダルを閉じる
+ */
+function closeDeleteAccountModal() {
+  const modal = document.getElementById('delete-account-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+/**
+ * アカウント削除を実行する
+ * パスワードを確認してAPIを呼び出し、成功したらログアウトしてトップへ
+ */
+async function handleDeleteAccount() {
+  const password = document.getElementById('delete-account-password')?.value;
+  if (!password) {
+    showAlert('delete-account-alert', 'パスワードを入力してください');
+    return;
+  }
+
+  const btn = document.getElementById('delete-account-confirm-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '削除中...';
+  }
+
+  try {
+    await apiDelete('/auth/delete-account', { password });
+
+    // 削除成功：ローカルストレージをクリアしてトップへ
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    closeDeleteAccountModal();
+    window.location.href = '/frontend/login.html';
+  } catch (err) {
+    showAlert('delete-account-alert', err.message || 'アカウントの削除に失敗しました');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '削除する';
+    }
+  }
 }
