@@ -481,8 +481,8 @@ function addCardRowToPrize(prizeKey, packId) {
       class="new-card-image-url" id="inline-img-${rowId}">
     <button type="button" class="btn btn-outline" style="padding:3px 7px; font-size:0.75rem; white-space:nowrap;"
       onclick="_uploadTargetInputId='inline-img-${rowId}'; document.getElementById('image-upload-input')?.click()">UP</button>
-    <input type="number" min="1" placeholder="コイン数(任意)"
-      style="width:100px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+    <input type="number" min="1" max="9999999" placeholder="コイン数(任意)"
+      style="width:120px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
       class="new-card-coin-value">
     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;"
       onclick="saveNewCardRow('${rowId}', '${prizeKey}', ${packId})">保存</button>
@@ -507,7 +507,7 @@ async function saveNewCardRow(rowId, prizeKey, packId) {
   const coinInput = row.querySelector('.new-card-coin-value');
   const name = nameInput.value.trim();
   const imageUrl = imageInput.value.trim();
-  const coinValueRaw = coinInput ? coinInput.value.trim() : '';
+  const coinValueRaw = normalizeNumericInput(coinInput ? coinInput.value.trim() : '');
 
   if (!name) {
     nameInput.style.borderColor = 'var(--error)';
@@ -674,7 +674,7 @@ function closeCardModal() {
 
 async function submitCardForm() {
   const cardId = document.getElementById('card-edit-id').value;
-  const coinValueRaw = document.getElementById('card-coin-value').value.trim();
+  const coinValueRaw = normalizeNumericInput(document.getElementById('card-coin-value').value.trim());
   const body = {
     pack_id: parseInt(document.getElementById('card-pack-id').value),
     name: document.getElementById('card-name').value,
@@ -876,7 +876,37 @@ async function updateShippingStatus(requestId, newStatus) {
 }
 
 
-// ===== 画像アップロード =====
+// ===== ユーティリティ =====
+
+/**
+ * 全角数字・小数点を半角に変換して数値文字列として返す
+ * ブラウザペースト時の全角数字入力による誤変換を防ぐ
+ * @param {string} str
+ * @returns {string}
+ */
+function normalizeNumericInput(str) {
+  return str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+            .replace(/[．。]/g, '.');
+}
+
+/**
+ * 数値 input の wheel イベントで値が変化しないようにする
+ * type="number" はフォーカス中にスクロールすると値が変わるブラウザ仕様があるため
+ */
+function disableWheelOnNumberInputs() {
+  document.querySelectorAll('input[type="number"]').forEach(el => {
+    // wheel イベントが来たらフォーカスを外してスクロールの誤操作を防ぐ
+    el.addEventListener('wheel', (e) => { el.blur(); }, { passive: true });
+  });
+}
+
+// DOMContentLoaded 時に wheel 対策を適用
+document.addEventListener('DOMContentLoaded', disableWheelOnNumberInputs);
+// モーダルが開かれる度に動的生成要素にも適用するためMutationObserverを設定
+const _wheelObserver = new MutationObserver(() => disableWheelOnNumberInputs());
+document.addEventListener('DOMContentLoaded', () => {
+  _wheelObserver.observe(document.body, { childList: true, subtree: true });
+});
 
 /** どの input に結果を反映するかを保持する */
 let _uploadTargetInputId = null;
