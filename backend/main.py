@@ -98,6 +98,12 @@ def legal_page():
     return FileResponse(os.path.join(frontend_path, "legal.html"))
 
 
+@app.get("/verify-email")
+def verify_email_page():
+    """メールアドレス認証ページ（メール内リンクからのアクセス用）"""
+    return FileResponse(os.path.join(frontend_path, "verify-email.html"))
+
+
 @app.get("/health")
 def health_check():
     """ヘルスチェックエンドポイント"""

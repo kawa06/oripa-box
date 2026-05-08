@@ -30,6 +30,7 @@ class UserResponse(BaseModel):
     coin_balance: int
     is_active: bool
     is_admin: bool = False
+    is_verified: bool = False  # メール認証済みフラグ
     points: int = 0
     created_at: datetime
 
@@ -185,6 +186,7 @@ class AdminUserResponse(BaseModel):
     points: int
     is_active: bool
     is_admin: bool
+    is_verified: bool = False  # メール認証済みフラグ
     created_at: datetime
 
     class Config:

@@ -35,10 +35,28 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./oripa_gacha.db")
 # 管理者メールアドレス（このメールで登録したユーザーが自動的にis_admin=Trueになる）
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
 
+# ===== SMTP（メール送信）設定 =====
+# メール認証に使用するSMTPサーバーの設定
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
+
+# メール認証トークンの有効期限（時間）
+EMAIL_VERIFY_EXPIRE_HOURS = 24
+
 # コインパック定義（コイン数: 価格(円)）
-# 100コイン = 100円 に統一
+# 100コイン = 100円 に統一。100万円パックまで対応。
 COIN_PACKS = {
-    "pack_100": {"coins": 100, "price_jpy": 100, "name": "100コイン"},
-    "pack_500": {"coins": 500, "price_jpy": 500, "name": "500コイン"},
-    "pack_1000": {"coins": 1000, "price_jpy": 1000, "name": "1000コイン"},
+    "pack_100":     {"coins": 100,     "price_jpy": 100,     "name": "100コイン"},
+    "pack_500":     {"coins": 500,     "price_jpy": 500,     "name": "500コイン"},
+    "pack_1000":    {"coins": 1000,    "price_jpy": 1000,    "name": "1000コイン"},
+    "pack_3000":    {"coins": 3000,    "price_jpy": 3000,    "name": "3000コイン"},
+    "pack_5000":    {"coins": 5000,    "price_jpy": 5000,    "name": "5000コイン"},
+    "pack_10000":   {"coins": 10000,   "price_jpy": 10000,   "name": "10000コイン"},
+    "pack_50000":   {"coins": 50000,   "price_jpy": 50000,   "name": "50000コイン"},
+    "pack_100000":  {"coins": 100000,  "price_jpy": 100000,  "name": "100000コイン"},
+    "pack_500000":  {"coins": 500000,  "price_jpy": 500000,  "name": "500000コイン"},
+    "pack_1000000": {"coins": 1000000, "price_jpy": 1000000, "name": "1000000コイン"},
 }

@@ -22,6 +22,7 @@ class User(Base):
     coin_balance = Column(Integer, default=0, nullable=False)  # コイン残高
     is_active = Column(Boolean, default=True)  # アカウント有効フラグ
     is_admin = Column(Boolean, default=False)  # 管理者フラグ
+    is_verified = Column(Boolean, default=False)  # メール認証済みフラグ
     points = Column(Integer, default=0, nullable=False)  # 交換ポイント残高
     created_at = Column(DateTime, default=datetime.utcnow)  # 作成日時
 

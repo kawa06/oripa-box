@@ -103,15 +103,27 @@ async function handleRegister(e) {
   try {
     const data = await apiPost('/auth/register', { email, username, password });
 
-    // トークンとユーザー情報を保存
-    saveToken(data.access_token);
-    saveUser(data.user);
-
-    // 新規登録ボーナスメッセージを一瞬見せてからリダイレクト
-    showAlert('register-alert', '登録完了！50コインのボーナスをプレゼント！', 'success');
-    setTimeout(() => {
-      window.location.href = '/frontend/index.html';
-    }, 1500);
+    if (data.requires_verification) {
+      // メール認証が必要な場合：トークンは保存せず確認メッセージを表示
+      showAlert(
+        'register-alert',
+        '登録が完了しました！確認メールを送信しました。メールを確認して認証を完了してください。',
+        'success'
+      );
+      // フォームを無効化して再送信を防ぐ
+      document.getElementById('register-form').style.display = 'none';
+    } else {
+      // SMTP未設定（開発環境）または管理者の場合：即ログイン
+      if (data.access_token && data.user) {
+        saveToken(data.access_token);
+        saveUser(data.user);
+      }
+      // 新規登録ボーナスメッセージを一瞬見せてからリダイレクト
+      showAlert('register-alert', '登録完了！50コインのボーナスをプレゼント！', 'success');
+      setTimeout(() => {
+        window.location.href = '/frontend/index.html';
+      }, 1500);
+    }
   } catch (err) {
     showAlert('register-alert', err.message);
   } finally {

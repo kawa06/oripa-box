@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - メールアドレス認証</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav"></ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="max-width: 480px; margin: 80px auto; text-align: center;">
+
+      <!-- 処理中スピナー -->
+      <div id="verify-loading" style="padding: 40px;">
+        <div class="spinner" style="margin: 0 auto 24px;"></div>
+        <p style="color: var(--text-secondary);">認証処理中...</p>
+      </div>
+
+      <!-- 認証成功 -->
+      <div id="verify-success" class="hidden fade-in">
+        <div style="font-size: 4rem; margin-bottom: 16px;">✅</div>
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; color: var(--success);">
+          認証完了！
+        </h1>
+        <p style="color: var(--text-secondary); margin-bottom: 32px; line-height: 1.7;">
+          メールアドレスの認証が完了しました。<br>
+          ログインしてオリパガチャをお楽しみください。
+        </p>
+        <a href="/frontend/index.html" class="btn btn-primary" style="padding: 14px 40px; font-size: 1rem;">
+          トップページへ
+        </a>
+      </div>
+
+      <!-- すでに認証済み -->
+      <div id="verify-already" class="hidden fade-in">
+        <div style="font-size: 4rem; margin-bottom: 16px;">✦</div>
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;">
+          認証済み
+        </h1>
+        <p style="color: var(--text-secondary); margin-bottom: 32px; line-height: 1.7;">
+          このメールアドレスはすでに認証済みです。<br>
+          そのままログインできます。
+        </p>
+        <a href="/frontend/index.html" class="btn btn-primary" style="padding: 14px 40px; font-size: 1rem;">
+          トップページへ
+        </a>
+      </div>
+
+      <!-- 認証失敗 -->
+      <div id="verify-error" class="hidden fade-in">
+        <div style="font-size: 4rem; margin-bottom: 16px;">❌</div>
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; color: var(--error);">
+          認証失敗
+        </h1>
+        <p id="verify-error-msg" style="color: var(--text-secondary); margin-bottom: 32px; line-height: 1.7;">
+          認証リンクが無効または期限切れです。<br>
+          新しい認証メールをリクエストしてください。
+        </p>
+        <a href="/frontend/index.html" class="btn btn-outline" style="padding: 14px 40px; font-size: 1rem;">
+          トップページへ
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script>
+    /**
+     * メールアドレス認証処理
+     * URLのtokenパラメータをAPIに送信してアカウントを有効化する
+     */
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      const loadingEl  = document.getElementById('verify-loading');
+      const successEl  = document.getElementById('verify-success');
+      const alreadyEl  = document.getElementById('verify-already');
+      const errorEl    = document.getElementById('verify-error');
+      const errorMsgEl = document.getElementById('verify-error-msg');
+
+      function showOnly(el) {
+        loadingEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+        alreadyEl.classList.add('hidden');
+        errorEl.classList.add('hidden');
+        el.classList.remove('hidden');
+      }
+
+      if (!token) {
+        showOnly(errorEl);
+        errorMsgEl.textContent = '認証トークンが見つかりません。メール内のリンクをそのままクリックしてください。';
+        return;
+      }
+
+      try {
+        // バックエンドの認証エンドポイントを呼び出す
+        const res = await fetch(`/api/auth/verify?token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          showOnly(errorEl);
+          errorMsgEl.textContent = data.detail || '認証に失敗しました。リンクが期限切れの可能性があります。';
+          return;
+        }
+
+        // 認証成功時は自動ログイン
+        if (data.access_token && data.user) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+
+        if (data.already_verified) {
+          showOnly(alreadyEl);
+        } else {
+          showOnly(successEl);
+        }
+
+      } catch (err) {
+        showOnly(errorEl);
+        errorMsgEl.textContent = '通信エラーが発生しました。しばらく後でお試しください。';
+      }
+    });
+  </script>
+</body>
+</html>
