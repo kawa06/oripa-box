@@ -43,6 +43,10 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 
+# SMTP設定が有効かどうかを示すフラグ
+# SMTP_USER と SMTP_PASSWORD の両方が設定されている場合のみ True
+SMTP_ENABLED = bool(SMTP_USER and SMTP_PASSWORD)
+
 # メール認証トークンの有効期限（時間）
 EMAIL_VERIFY_EXPIRE_HOURS = 24
 

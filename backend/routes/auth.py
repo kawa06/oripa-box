@@ -16,7 +16,7 @@ from backend.auth import (
 )
 from backend.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_EMAIL,
-    SECRET_KEY, ALGORITHM
+    SECRET_KEY, ALGORITHM, SMTP_ENABLED
 )
 from backend.email_utils import send_verification_email
 
@@ -61,8 +61,8 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     hashed_password = get_password_hash(user_data.password)
     # ADMIN_EMAILと一致した場合は管理者アカウントとして作成
     is_admin = bool(ADMIN_EMAIL and user_data.email.lower() == ADMIN_EMAIL.lower())
-    # 管理者アカウントはメール認証をスキップして最初から認証済みにする
-    is_verified_initial = is_admin
+    # 管理者アカウント、またはSMTP未設定環境ではメール認証をスキップして最初から認証済みにする
+    is_verified_initial = is_admin or not SMTP_ENABLED
     new_user = models.User(
         email=user_data.email,
         username=user_data.username,
@@ -139,8 +139,8 @@ def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
             detail="アカウントが無効です"
         )
 
-    # メール認証チェック
-    if not user.is_verified:
+    # メール認証チェック（SMTP設定済みの場合のみ実施）
+    if SMTP_ENABLED and not user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="メール認証が完了していません。登録時に送信されたメールを確認してください。"
