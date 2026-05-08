@@ -32,9 +32,13 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8000")
 # データベースURL
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./oripa_gacha.db")
 
+# 管理者メールアドレス（このメールで登録したユーザーが自動的にis_admin=Trueになる）
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+
 # コインパック定義（コイン数: 価格(円)）
+# 100コイン = 100円 に統一
 COIN_PACKS = {
-    "pack_100": {"coins": 100, "price_jpy": 500, "name": "100コイン"},
-    "pack_500": {"coins": 500, "price_jpy": 2000, "name": "500コイン"},
-    "pack_1000": {"coins": 1000, "price_jpy": 3500, "name": "1000コイン"},
+    "pack_100": {"coins": 100, "price_jpy": 100, "name": "100コイン"},
+    "pack_500": {"coins": 500, "price_jpy": 500, "name": "500コイン"},
+    "pack_1000": {"coins": 1000, "price_jpy": 1000, "name": "1000コイン"},
 }

@@ -13,7 +13,7 @@ from backend.auth import (
     create_access_token,
     get_current_user
 )
-from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_EMAIL
 
 router = APIRouter(prefix="/api/auth", tags=["認証"])
 
@@ -53,11 +53,14 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # ユーザー作成
     hashed_password = get_password_hash(user_data.password)
+    # ADMIN_EMAILと一致した場合は管理者アカウントとして作成
+    is_admin = bool(ADMIN_EMAIL and user_data.email.lower() == ADMIN_EMAIL.lower())
     new_user = models.User(
         email=user_data.email,
         username=user_data.username,
         hashed_password=hashed_password,
-        coin_balance=0
+        coin_balance=0,
+        is_admin=is_admin
     )
     db.add(new_user)
     db.commit()

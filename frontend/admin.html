@@ -34,6 +34,25 @@
       <p>パック・カード・ユーザーの管理</p>
     </div>
 
+    <!-- 管理者アクセス方法の案内（管理者チェック前に表示、後でJSで隠す） -->
+    <div id="admin-info-banner" style="
+      background: rgba(255, 200, 0, 0.08);
+      border: 1px solid rgba(255, 200, 0, 0.3);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      display: none;
+    ">
+      <strong style="color: var(--accent-gold);">管理者になる方法：</strong>
+      <ol style="margin: 8px 0 0 16px; line-height: 1.7;">
+        <li>サーバーの環境変数 <code>ADMIN_EMAIL</code> に管理者にしたいメールアドレスを設定する</li>
+        <li>そのメールアドレスで新規登録すると自動的に管理者アカウントになる</li>
+        <li>既存アカウントの場合はDBで <code>is_admin = 1</code> に変更するか、一度削除して再登録する</li>
+      </ol>
+    </div>
+
     <div id="admin-alert" class="alert"></div>
 
     <!-- タブナビゲーション -->
