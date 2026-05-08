@@ -1,7 +1,7 @@
 """
 ポイント交換ルート
 被りカードをポイントに変換し、ポイントでカードを入手できるシステム
-レアリティ別変換レート: N=10pt, R=30pt, SR=100pt, SSR=300pt, UR=1000pt
+賞別変換レート: E賞=10pt, D賞=30pt, C賞=100pt, B賞=300pt, A賞=1000pt
 """
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,22 +12,22 @@ from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/exchange", tags=["ポイント交換"])
 
-# レアリティ別ポイント変換レート
+# 賞別ポイント変換レート
 RARITY_POINTS = {
-    "N": 10,
-    "R": 30,
-    "SR": 100,
-    "SSR": 300,
-    "UR": 1000,
+    "E賞": 10,
+    "D賞": 30,
+    "C賞": 100,
+    "B賞": 300,
+    "A賞": 1000,
 }
 
 # ポイントでカードを入手する際のポイントコスト（変換レートの2倍）
 RARITY_EXCHANGE_COST = {
-    "N": 20,
-    "R": 60,
-    "SR": 200,
-    "SSR": 600,
-    "UR": 2000,
+    "E賞": 20,
+    "D賞": 60,
+    "C賞": 200,
+    "B賞": 600,
+    "A賞": 2000,
 }
 
 

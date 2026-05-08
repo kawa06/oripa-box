@@ -228,7 +228,29 @@ async function updateNavbar() {
   }
 }
 
-// ページ読み込み時にナビゲーション更新
+// ページ読み込み時にナビゲーション更新 + フッター挿入
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbar();
+  insertFooter();
 });
+
+/**
+ * 全ページ共通フッターを動的に挿入する
+ * body 末尾の <footer class="site-footer"> が未存在の場合のみ追加する
+ */
+function insertFooter() {
+  // index.html は既に静的フッターを持っているので二重挿入しない
+  if (document.querySelector('.site-footer')) return;
+
+  const footer = document.createElement('footer');
+  footer.className = 'site-footer';
+  footer.innerHTML = `
+    <div class="footer-links">
+      <a href="/frontend/terms.html">利用規約</a>
+      <a href="/frontend/legal.html">特定商取引法に基づく表記</a>
+      <a href="/frontend/privacy.html">プライバシーポリシー</a>
+    </div>
+    <p class="footer-copy">&copy; 2025 オリパガチャ All Rights Reserved.</p>
+  `;
+  document.body.appendChild(footer);
+}

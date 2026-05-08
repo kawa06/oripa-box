@@ -59,7 +59,7 @@ class Card(Base):
     id = Column(Integer, primary_key=True, index=True)
     pack_id = Column(Integer, ForeignKey("packs.id"), nullable=False)  # 所属パック
     name = Column(String, nullable=False)  # カード名
-    rarity = Column(String, nullable=False)  # レアリティ（UR/SSR/SR/R/N）
+    rarity = Column(String, nullable=False)  # 賞（A賞/B賞/C賞/D賞/E賞）
     probability = Column(Float, nullable=False)  # 排出確率（0.0〜1.0）
     image_url = Column(String)  # カード画像URL
     description = Column(Text)  # カード説明
@@ -105,14 +105,14 @@ class CoinTransaction(Base):
 class PityCounter(Base):
     """天井（ピティ）カウンターモデル
     ユーザーがパックごとに何回ガチャを引いたかを記録する
-    50回でUR確定
+    50回でA賞確定
     """
     __tablename__ = "pity_counters"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ユーザー
     pack_id = Column(Integer, ForeignKey("packs.id"), nullable=False)  # パック
-    count = Column(Integer, default=0, nullable=False)  # 天井カウント（UR排出でリセット）
+    count = Column(Integer, default=0, nullable=False)  # 天井カウント（A賞排出でリセット）
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # リレーション

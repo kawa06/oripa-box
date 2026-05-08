@@ -279,7 +279,7 @@ async function loadCards() {
       wrap.innerHTML = '<p class="text-secondary text-center" style="padding: 24px;">カードがありません</p>';
       return;
     }
-    const rarityColors = { UR: 'var(--rarity-ur)', SSR: 'var(--rarity-ssr)', SR: 'var(--rarity-sr)', R: 'var(--rarity-r)', N: 'var(--rarity-n)' };
+    const rarityColors = { 'A賞': 'var(--rarity-ur)', 'B賞': 'var(--rarity-ssr)', 'C賞': 'var(--rarity-sr)', 'D賞': 'var(--rarity-r)', 'E賞': 'var(--rarity-n)' };
     wrap.innerHTML = `
       <table class="admin-table">
         <thead><tr>
@@ -326,7 +326,7 @@ function openCardModal(card = null) {
   } else {
     title.textContent = 'カード追加';
     document.getElementById('card-name').value = '';
-    document.getElementById('card-rarity').value = 'N';
+    document.getElementById('card-rarity').value = 'E賞';
     document.getElementById('card-probability').value = '';
     document.getElementById('card-image-url').value = '';
     document.getElementById('card-description').value = '';

@@ -32,8 +32,8 @@ async function loadHistory() {
     }
 
     const rarityColors = {
-      UR: 'var(--rarity-ur)', SSR: 'var(--rarity-ssr)',
-      SR: 'var(--rarity-sr)', R: 'var(--rarity-r)', N: 'var(--rarity-n)'
+      'A賞': 'var(--rarity-ur)', 'B賞': 'var(--rarity-ssr)',
+      'C賞': 'var(--rarity-sr)', 'D賞': 'var(--rarity-r)', 'E賞': 'var(--rarity-n)'
     };
 
     container.innerHTML = history.map(item => {

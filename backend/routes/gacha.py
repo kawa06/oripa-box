@@ -2,7 +2,7 @@
 ガチャルート
 ガチャ実行APIエンドポイント
 確率に基づいてカードを抽選し、コインを消費する
-天井（ピティ）システム: 50回引いたらUR確定
+天井（ピティ）システム: 50回引いたらA賞確定
 """
 import random
 from datetime import datetime
@@ -14,16 +14,16 @@ from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/gacha", tags=["ガチャ"])
 
-# 天井回数（この回数引いたらUR確定）
+# 天井回数（この回数引いたらA賞確定）
 PITY_LIMIT = 50
 
-# レアリティの基本確率定義（合計100%）
+# 賞の基本確率定義（合計100%）
 RARITY_PROBABILITIES = {
-    "UR": 0.01,   # 1%
-    "SSR": 0.04,  # 4%
-    "SR": 0.15,   # 15%
-    "R": 0.30,    # 30%
-    "N": 0.50,    # 50%
+    "A賞": 0.01,   # 1%
+    "B賞": 0.04,   # 4%
+    "C賞": 0.15,   # 15%
+    "D賞": 0.30,   # 30%
+    "E賞": 0.50,   # 50%
 }
 
 
@@ -43,16 +43,16 @@ def draw_card(cards: list) -> models.Card:
 
 def draw_ur_card(cards: list) -> models.Card:
     """
-    URカードのみから抽選する（天井発動時）
-    URカードが存在しない場合は最高レアリティから抽選
+    A賞カードのみから抽選する（天井発動時）
+    A賞カードが存在しない場合は最高賞から抽選
     """
-    ur_cards = [c for c in cards if c.rarity == "UR"]
-    if ur_cards:
-        return random.choice(ur_cards)
-    # UR が無い場合は SSR から抽選
-    ssr_cards = [c for c in cards if c.rarity == "SSR"]
-    if ssr_cards:
-        return random.choice(ssr_cards)
+    a_cards = [c for c in cards if c.rarity == "A賞"]
+    if a_cards:
+        return random.choice(a_cards)
+    # A賞が無い場合は B賞 から抽選
+    b_cards = [c for c in cards if c.rarity == "B賞"]
+    if b_cards:
+        return random.choice(b_cards)
     # それも無い場合は通常抽選
     return draw_card(cards)
 
@@ -83,7 +83,7 @@ def draw_gacha(
     - コインを消費してパックからカードを1枚抽選
     - 在庫を1減らす
     - 結果をDBに記録する
-    - 天井システム: 50回でUR確定、UR排出でカウンターリセット
+    - 天井システム: 50回でA賞確定、A賞排出でカウンターリセット
     - コレクションに追加（UserCard テーブル）
     """
     # パック取得（在庫チェック含む）
@@ -127,15 +127,15 @@ def draw_gacha(
     pity = get_or_create_pity(db, current_user.id, pack.id)
     pity_triggered = False
 
-    # 天井発動チェック（PITY_LIMIT回に達したらUR確定）
+    # 天井発動チェック（PITY_LIMIT回に達したらA賞確定）
     if pity.count >= PITY_LIMIT - 1:
         drawn_card = draw_ur_card(cards)
         pity_triggered = True
     else:
         drawn_card = draw_card(cards)
 
-    # UR排出時は天井カウンターをリセット
-    if drawn_card.rarity == "UR":
+    # A賞排出時は天井カウンターをリセット
+    if drawn_card.rarity == "A賞":
         pity.count = 0
     else:
         pity.count += 1

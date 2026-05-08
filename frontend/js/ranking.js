@@ -1,6 +1,6 @@
 /**
  * ranking.js - ランキング画面スクリプト
- * URカード保有数ランキングを表示する
+ * A賞カード保有数ランキングを表示する
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -40,7 +40,7 @@ async function loadRanking() {
               <span class="ranking-username">${entry.username}${isMe ? ' (あなた)' : ''}</span>
               <span class="ranking-ur-count">
                 <span style="color: var(--rarity-ur); font-weight: 800;">${entry.ur_count}</span>
-                <span style="color: var(--text-secondary); font-size: 0.85rem;"> UR</span>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;"> A賞</span>
               </span>
             </div>
           `;

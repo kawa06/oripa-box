@@ -14,21 +14,21 @@ router = APIRouter(prefix="/api/collection", tags=["コレクション"])
 
 @router.get("")
 def get_collection(
-    rarity: Optional[str] = Query(None, description="レアリティでフィルタ (UR/SSR/SR/R/N)"),
+    rarity: Optional[str] = Query(None, description="賞でフィルタ (A賞/B賞/C賞/D賞/E賞)"),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     ログインユーザーの所持カード一覧を取得する
-    rarity パラメータでレアリティ別フィルタが可能
+    rarity パラメータで賞別フィルタが可能
     """
     query = db.query(models.UserCard).filter(
         models.UserCard.user_id == current_user.id
     )
 
-    # レアリティフィルタ
+    # 賞フィルタ（A賞〜E賞の文字列で一致）
     if rarity:
-        query = query.join(models.Card).filter(models.Card.rarity == rarity.upper())
+        query = query.join(models.Card).filter(models.Card.rarity == rarity)
 
     user_cards = query.order_by(
         models.UserCard.obtained_at.desc()
@@ -64,7 +64,7 @@ def get_collection_stats(
         models.UserCard.user_id == current_user.id
     ).all()
 
-    stats = {"UR": 0, "SSR": 0, "SR": 0, "R": 0, "N": 0, "total": 0}
+    stats = {"A賞": 0, "B賞": 0, "C賞": 0, "D賞": 0, "E賞": 0, "total": 0}
     for uc in user_cards:
         rarity = uc.card.rarity
         if rarity in stats:

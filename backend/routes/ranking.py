@@ -1,6 +1,6 @@
 """
 ランキングルート
-URカード保有数ランキングを返すAPIエンドポイント
+A賞カード保有数ランキングを返すAPIエンドポイント
 """
 from typing import List
 from fastapi import APIRouter, Depends
@@ -18,15 +18,15 @@ def get_ur_ranking(
     db: Session = Depends(get_db)
 ):
     """
-    URカード保有数ランキングを返す（上位20名）
-    UserCard テーブルの UR カード所持枚数合計で順位付け
+    A賞カード保有数ランキングを返す（上位20名）
+    UserCard テーブルの A賞 カード所持枚数合計で順位付け
     """
-    # UR カードのIDを取得
+    # A賞 カードのIDを取得
     ur_card_ids = db.query(models.Card.id).filter(
-        models.Card.rarity == "UR"
+        models.Card.rarity == "A賞"
     ).subquery()
 
-    # ユーザーごとの UR 所持枚数合計を集計
+    # ユーザーごとの A賞 所持枚数合計を集計
     ranking_query = (
         db.query(
             models.User.username,

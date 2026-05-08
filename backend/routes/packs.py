@@ -12,10 +12,11 @@ from backend.auth import get_current_user
 router = APIRouter(prefix="/api/packs", tags=["パック"])
 
 
-@router.get("/", response_model=List[schemas.PackListResponse])
+@router.get("/", response_model=List[schemas.PackResponse])
 def get_packs(db: Session = Depends(get_db)):
     """
     販売中のパック一覧を取得する（認証不要）
+    カードプレビュー用に cards も含めて返す
     """
     packs = db.query(models.Pack).filter(models.Pack.is_active == True).all()
     return packs

@@ -19,12 +19,18 @@
   --error: #ef4444;
   --warning: #f59e0b;
 
-  /* レアリティカラー */
-  --rarity-ur: #ffd700;
-  --rarity-ssr: #e879f9;
-  --rarity-sr: #a78bfa;
-  --rarity-r: #38bdf8;
-  --rarity-n: #94a3b8;
+  /* 賞カラー（A賞=金/B賞=ピンク/C賞=紫/D賞=水色/E賞=グレー） */
+  --rarity-ur: #ffd700;   /* A賞 */
+  --rarity-ssr: #e879f9;  /* B賞 */
+  --rarity-sr: #a78bfa;   /* C賞 */
+  --rarity-r: #38bdf8;    /* D賞 */
+  --rarity-n: #94a3b8;    /* E賞 */
+  /* 賞別エイリアス */
+  --prize-a: #ffd700;
+  --prize-b: #e879f9;
+  --prize-c: #a78bfa;
+  --prize-d: #38bdf8;
+  --prize-e: #94a3b8;
 
   --radius: 12px;
   --transition: 0.3s ease;
@@ -648,34 +654,34 @@ body {
   text-transform: uppercase;
 }
 
-/* レアリティ別スタイル */
-.rarity-UR .rarity-badge {
+/* 賞別スタイル（A賞〜E賞） */
+.rarity-A賞 .rarity-badge, .rarity-UR .rarity-badge {
   background: linear-gradient(135deg, var(--rarity-ur), #ff8c00);
   color: #1a1a00;
 }
 
-.rarity-SSR .rarity-badge {
+.rarity-B賞 .rarity-badge, .rarity-SSR .rarity-badge {
   background: linear-gradient(135deg, #c026d3, var(--rarity-ssr));
   color: white;
 }
 
-.rarity-SR .rarity-badge {
+.rarity-C賞 .rarity-badge, .rarity-SR .rarity-badge {
   background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
   color: white;
 }
 
-.rarity-R .rarity-badge {
+.rarity-D賞 .rarity-badge, .rarity-R .rarity-badge {
   background: linear-gradient(135deg, var(--accent-blue), #0284c7);
   color: white;
 }
 
-.rarity-N .rarity-badge {
+.rarity-E賞 .rarity-badge, .rarity-N .rarity-badge {
   background: rgba(148, 163, 184, 0.2);
   color: var(--rarity-n);
   border: 1px solid var(--rarity-n);
 }
 
-/* ===== URエフェクト（金色に光る） ===== */
+/* ===== A賞エフェクト（金色に光る・最大エフェクト） ===== */
 @keyframes urGlow {
   0%, 100% {
     box-shadow:
@@ -696,13 +702,15 @@ body {
   100% { transform: translateX(300%) rotate(45deg); }
 }
 
-.rarity-UR.card-flip-container.flipped .card-front {
+.rarity-UR.card-flip-container.flipped .card-front,
+.rarity-A賞.card-flip-container.flipped .card-front {
   border-color: var(--rarity-ur);
   animation: urGlow 2s ease-in-out infinite;
   background: linear-gradient(135deg, #1a1200, #2a2200, #1a1800);
 }
 
-.rarity-UR.card-flip-container.flipped .card-front::before {
+.rarity-UR.card-flip-container.flipped .card-front::before,
+.rarity-A賞.card-flip-container.flipped .card-front::before {
   content: '';
   position: absolute;
   top: 0;
@@ -728,7 +736,8 @@ body {
   }
 }
 
-.rarity-SSR.card-flip-container.flipped .card-front {
+.rarity-SSR.card-flip-container.flipped .card-front,
+.rarity-B賞.card-flip-container.flipped .card-front {
   border-color: var(--rarity-ssr);
   animation: ssrGlow 2s ease-in-out infinite;
 }
@@ -739,7 +748,8 @@ body {
   50% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.7); }
 }
 
-.rarity-SR.card-flip-container.flipped .card-front {
+.rarity-SR.card-flip-container.flipped .card-front,
+.rarity-C賞.card-flip-container.flipped .card-front {
   border-color: var(--rarity-sr);
   animation: srGlow 2s ease-in-out infinite;
 }
@@ -780,12 +790,14 @@ body {
   transition: opacity 0.5s ease;
 }
 
-.gacha-stage.ur-glow .stage-light {
+.gacha-stage.ur-glow .stage-light,
+.gacha-stage.a-glow .stage-light {
   background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
   opacity: 1;
 }
 
-.gacha-stage.ssr-glow .stage-light {
+.gacha-stage.ssr-glow .stage-light,
+.gacha-stage.b-glow .stage-light {
   background: radial-gradient(ellipse at center, rgba(232, 121, 249, 0.2) 0%, transparent 70%);
   opacity: 1;
 }
@@ -935,11 +947,11 @@ body {
   flex-shrink: 0;
 }
 
-.history-rarity-dot.UR { background: var(--rarity-ur); box-shadow: 0 0 8px var(--rarity-ur); }
-.history-rarity-dot.SSR { background: var(--rarity-ssr); box-shadow: 0 0 8px var(--rarity-ssr); }
-.history-rarity-dot.SR { background: var(--rarity-sr); box-shadow: 0 0 8px var(--rarity-sr); }
-.history-rarity-dot.R { background: var(--rarity-r); }
-.history-rarity-dot.N { background: var(--rarity-n); }
+.history-rarity-dot.UR, .history-rarity-dot.A賞 { background: var(--rarity-ur); box-shadow: 0 0 8px var(--rarity-ur); }
+.history-rarity-dot.SSR, .history-rarity-dot.B賞 { background: var(--rarity-ssr); box-shadow: 0 0 8px var(--rarity-ssr); }
+.history-rarity-dot.SR, .history-rarity-dot.C賞 { background: var(--rarity-sr); box-shadow: 0 0 8px var(--rarity-sr); }
+.history-rarity-dot.R, .history-rarity-dot.D賞 { background: var(--rarity-r); }
+.history-rarity-dot.N, .history-rarity-dot.E賞 { background: var(--rarity-n); }
 
 /* ===== レスポンシブデザイン ===== */
 @media (max-width: 768px) {
@@ -1069,12 +1081,161 @@ body {
   color: var(--text-secondary);
 }
 
-/* レアリティ別ボーダー色 */
-.collection-card.rarity-UR { border-color: rgba(255, 215, 0, 0.5); }
-.collection-card.rarity-SSR { border-color: rgba(232, 121, 249, 0.4); }
-.collection-card.rarity-SR { border-color: rgba(167, 139, 250, 0.4); }
-.collection-card.rarity-R { border-color: rgba(56, 189, 248, 0.3); }
-.collection-card.rarity-N { border-color: var(--border-color); }
+/* 賞別ボーダー色（A賞〜E賞の新名称に対応） */
+.collection-card.rarity-A賞 { border-color: rgba(255, 215, 0, 0.5); }
+.collection-card.rarity-B賞 { border-color: rgba(232, 121, 249, 0.4); }
+.collection-card.rarity-C賞 { border-color: rgba(167, 139, 250, 0.4); }
+.collection-card.rarity-D賞 { border-color: rgba(56, 189, 248, 0.3); }
+.collection-card.rarity-E賞 { border-color: var(--border-color); }
+
+/* 履歴ドット（A賞〜E賞） */
+.history-rarity-dot.A賞 { background: var(--rarity-ur); box-shadow: 0 0 8px var(--rarity-ur); }
+.history-rarity-dot.B賞 { background: var(--rarity-ssr); box-shadow: 0 0 8px var(--rarity-ssr); }
+.history-rarity-dot.C賞 { background: var(--rarity-sr); box-shadow: 0 0 8px var(--rarity-sr); }
+.history-rarity-dot.D賞 { background: var(--rarity-r); }
+.history-rarity-dot.E賞 { background: var(--rarity-n); }
+
+/* ===== A賞エフェクト（金色・最大エフェクト） ===== */
+.rarity-A賞.card-flip-container.flipped .card-front {
+  border-color: var(--prize-a);
+  animation: urGlow 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #1a1200, #2a2200, #1a1800);
+}
+
+.rarity-A賞.card-flip-container.flipped .card-front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+  animation: urShine 2s ease-in-out infinite 0.5s;
+  pointer-events: none;
+}
+
+/* B賞エフェクト（紫に光る） */
+.rarity-B賞.card-flip-container.flipped .card-front {
+  border-color: var(--prize-b);
+  animation: ssrGlow 2s ease-in-out infinite;
+}
+
+/* C賞エフェクト（青紫に光る） */
+.rarity-C賞.card-flip-container.flipped .card-front {
+  border-color: var(--prize-c);
+  animation: srGlow 2s ease-in-out infinite;
+}
+
+/* ステージ光エフェクト（A賞・B賞） */
+.gacha-stage.a-glow .stage-light {
+  background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.25) 0%, transparent 70%);
+  opacity: 1;
+}
+
+.gacha-stage.b-glow .stage-light {
+  background: radial-gradient(ellipse at center, rgba(232, 121, 249, 0.2) 0%, transparent 70%);
+  opacity: 1;
+}
+
+/* ===== パックカードプレビュー（賞別カード画像） ===== */
+.pack-prize-preview {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 0 20px 12px;
+  align-items: flex-end;
+}
+
+.prize-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  min-width: 40px;
+  max-width: 64px;
+}
+
+.prize-preview-img {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.prize-preview-placeholder {
+  width: 40px;
+  height: 56px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 1px solid;
+}
+
+.prize-preview-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ===== フッター ===== */
+.site-footer {
+  background: rgba(18, 18, 42, 0.95);
+  border-top: 1px solid var(--border-color);
+  padding: 24px;
+  text-align: center;
+  margin-top: 64px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.footer-links a:hover {
+  color: var(--accent-purple);
+}
+
+.footer-copy {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* パック一覧下のリンクエリア */
+.pack-footer-links {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.pack-footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.pack-footer-links a:hover {
+  color: var(--accent-purple);
+}
 
 /* フィルターボタン */
 .collection-filter {

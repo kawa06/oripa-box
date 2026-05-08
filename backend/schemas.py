@@ -105,7 +105,7 @@ class GachaResultResponse(BaseModel):
     coins_spent: int
     remaining_balance: int
     pack_remaining_stock: int
-    pity_count: int = 0          # 現在の天井カウント（UR排出後はリセット済み）
+    pity_count: int = 0          # 現在の天井カウント（A賞排出後はリセット済み）
     pity_triggered: bool = False  # 天井が発動したかどうか
 
 
@@ -245,4 +245,4 @@ class RankingEntry(BaseModel):
     """ランキングエントリー"""
     rank: int
     username: str
-    ur_count: int
+    ur_count: int  # A賞獲得数（フィールド名は後方互換のためur_countのまま）

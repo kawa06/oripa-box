@@ -6,7 +6,7 @@
  * 2. APIを呼び出してカード抽選
  * 3. 暗転ステージが表示され、カード裏面が現れる
  * 4. カードをクリックするとフリップして表が見える
- * 5. レアリティに応じたエフェクトが発動
+ * 5. 賞に応じたエフェクトが発動（A賞が最も派手な金色）
  */
 
 // 現在選択中のパックID
@@ -225,21 +225,24 @@ function showGachaAnimation(result) {
   // ステージのクラスをリセット
   stage.className = 'gacha-stage';
 
-  // レアリティ別のステージエフェクトを設定
-  if (rarity === 'UR') {
-    stage.classList.add('ur-glow');
-  } else if (rarity === 'SSR') {
-    stage.classList.add('ssr-glow');
+  // 賞別のステージエフェクトを設定（A賞が最も派手な金色）
+  if (rarity === 'A賞') {
+    stage.classList.add('a-glow');
+  } else if (rarity === 'B賞') {
+    stage.classList.add('b-glow');
   }
 
   // カード表面のHTMLを構築
   const cardFrontHTML = buildCardFrontHTML(card);
   const particlesHTML = buildParticlesHTML(rarity);
 
+  // CSS クラス名用にスペースをエスケープ（例: "A賞" → "A賞"はそのまま使用）
+  const rarityClass = `rarity-${rarity}`;
+
   stage.innerHTML = `
     <div class="stage-light"></div>
     ${particlesHTML}
-    <div class="card-flip-container rarity-${rarity}" id="flip-container">
+    <div class="card-flip-container ${rarityClass}" id="flip-container">
       <div class="card-flip-inner">
         <!-- カード裏面 -->
         <div class="card-face card-back"></div>
@@ -282,11 +285,11 @@ function flipCard(container, rarity) {
     if (closeBtn) closeBtn.classList.add('show');
   }, 800);
 
-  // UR/SSRの場合は効果音的な演出（画面が一瞬光る）
-  if (rarity === 'UR' || rarity === 'SSR') {
+  // A賞・B賞の場合は効果音的な演出（画面が一瞬光る）
+  if (rarity === 'A賞' || rarity === 'B賞') {
     setTimeout(() => {
       document.body.style.transition = 'background-color 0.1s';
-      document.body.style.backgroundColor = rarity === 'UR' ? '#2a2000' : '#200020';
+      document.body.style.backgroundColor = rarity === 'A賞' ? '#2a2000' : '#200020';
       setTimeout(() => {
         document.body.style.backgroundColor = '';
         document.body.style.transition = '';
@@ -310,54 +313,61 @@ function closeGachaStage() {
  * カード表面のHTMLを生成する
  */
 function buildCardFrontHTML(card) {
+  // 賞ごとのカラーマッピング
   const rarityColors = {
-    'UR': '#ffd700',
-    'SSR': '#e879f9',
-    'SR': '#a78bfa',
-    'R': '#38bdf8',
-    'N': '#94a3b8',
+    'A賞': '#ffd700',
+    'B賞': '#e879f9',
+    'C賞': '#a78bfa',
+    'D賞': '#38bdf8',
+    'E賞': '#94a3b8',
   };
 
+  // 賞ごとの絵文字
   const cardEmojis = {
-    'UR': '👑',
-    'SSR': '✨',
-    'SR': '💫',
-    'R': '⭐',
-    'N': '🃏',
+    'A賞': '👑',
+    'B賞': '✨',
+    'C賞': '💫',
+    'D賞': '⭐',
+    'E賞': '🃏',
   };
+
+  const color = rarityColors[card.rarity] || '#666';
+  const emoji = cardEmojis[card.rarity] || '🃏';
 
   const artContent = card.image_url
     ? `<img src="${card.image_url}" alt="${card.name}">`
-    : `<span style="font-size: 5rem;">${cardEmojis[card.rarity] || '🃏'}</span>`;
+    : `<span style="font-size: 5rem;">${emoji}</span>`;
 
   return `
-    <div class="card-art" style="border: 2px solid ${rarityColors[card.rarity] || '#666'}">
+    <div class="card-art" style="border: 2px solid ${color}">
       ${artContent}
     </div>
     <div class="card-info">
-      <span class="rarity-badge" style="background: linear-gradient(135deg, ${rarityColors[card.rarity]}, ${rarityColors[card.rarity]}88); color: ${card.rarity === 'N' ? '#94a3b8' : '#fff'}; border: 1px solid ${rarityColors[card.rarity]};">
+      <span class="rarity-badge" style="background: linear-gradient(135deg, ${color}, ${color}88); color: ${card.rarity === 'E賞' ? '#94a3b8' : '#fff'}; border: 1px solid ${color};">
         ${card.rarity}
       </span>
-      <p class="card-name" style="color: ${rarityColors[card.rarity]};">${card.name}</p>
+      <p class="card-name" style="color: ${color};">${card.name}</p>
       <p style="font-size: 0.8rem; color: var(--text-secondary);">${card.description || ''}</p>
     </div>
   `;
 }
 
 /**
- * レアリティ別パーティクルHTMLを生成する（UR/SSR/SRのみ）
+ * 賞別パーティクルHTMLを生成する（A賞/B賞/C賞のみ）
  */
 function buildParticlesHTML(rarity) {
-  if (!['UR', 'SSR', 'SR'].includes(rarity)) return '';
+  if (!['A賞', 'B賞', 'C賞'].includes(rarity)) return '';
 
+  // 賞ごとのパーティクルカラー
   const colors = {
-    'UR': ['#ffd700', '#ff8c00', '#ffec80'],
-    'SSR': ['#e879f9', '#c026d3', '#f0abfc'],
-    'SR': ['#a78bfa', '#7c3aed', '#c4b5fd'],
+    'A賞': ['#ffd700', '#ff8c00', '#ffec80'],
+    'B賞': ['#e879f9', '#c026d3', '#f0abfc'],
+    'C賞': ['#a78bfa', '#7c3aed', '#c4b5fd'],
   };
 
   const particleColors = colors[rarity] || ['#ffffff'];
-  const count = rarity === 'UR' ? 20 : rarity === 'SSR' ? 15 : 10;
+  // A賞は最も多いパーティクルで派手に演出
+  const count = rarity === 'A賞' ? 25 : rarity === 'B賞' ? 15 : 10;
 
   let html = '<div class="particles-container">';
   for (let i = 0; i < count; i++) {
@@ -365,7 +375,7 @@ function buildParticlesHTML(rarity) {
     const left = Math.random() * 100;
     const delay = Math.random() * 2;
     const duration = 2 + Math.random() * 2;
-    const size = 4 + Math.random() * 6;
+    const size = rarity === 'A賞' ? 5 + Math.random() * 8 : 4 + Math.random() * 6;
 
     html += `
       <div class="particle" style="
@@ -376,7 +386,7 @@ function buildParticlesHTML(rarity) {
         height: ${size}px;
         animation-delay: ${delay}s;
         animation-duration: ${duration}s;
-        box-shadow: 0 0 6px ${color};
+        box-shadow: 0 0 ${rarity === 'A賞' ? 10 : 6}px ${color};
       "></div>
     `;
   }

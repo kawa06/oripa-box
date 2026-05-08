@@ -57,7 +57,7 @@
         レアカードをゲットしよう！
       </h2>
       <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 1.05rem;">
-        UR確率1%の超レアカードが登場。各パックは100口限定！
+        A賞確率1%の超レアカードが登場。各パックは100口限定！
       </p>
       <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
         <a href="/frontend/gacha.html" class="btn btn-gold btn-lg">🎲 ガチャを引く</a>
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <!-- レアリティ説明 -->
+    <!-- 賞説明 -->
     <div style="
       display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
       margin-bottom: 48px;
@@ -73,31 +73,31 @@
       <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
                   background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3);
                   border-radius: 20px;">
-        <span style="color: var(--rarity-ur); font-weight: 800;">UR</span>
+        <span style="color: var(--prize-a); font-weight: 800;">A賞</span>
         <span style="color: var(--text-secondary); font-size: 0.85rem;">1%</span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
                   background: rgba(232, 121, 249, 0.1); border: 1px solid rgba(232, 121, 249, 0.3);
                   border-radius: 20px;">
-        <span style="color: var(--rarity-ssr); font-weight: 800;">SSR</span>
+        <span style="color: var(--prize-b); font-weight: 800;">B賞</span>
         <span style="color: var(--text-secondary); font-size: 0.85rem;">4%</span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
                   background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3);
                   border-radius: 20px;">
-        <span style="color: var(--rarity-sr); font-weight: 800;">SR</span>
+        <span style="color: var(--prize-c); font-weight: 800;">C賞</span>
         <span style="color: var(--text-secondary); font-size: 0.85rem;">15%</span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
                   background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
                   border-radius: 20px;">
-        <span style="color: var(--rarity-r); font-weight: 800;">R</span>
+        <span style="color: var(--prize-d); font-weight: 800;">D賞</span>
         <span style="color: var(--text-secondary); font-size: 0.85rem;">30%</span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px; padding: 6px 14px;
                   background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3);
                   border-radius: 20px;">
-        <span style="color: var(--rarity-n); font-weight: 800;">N</span>
+        <span style="color: var(--prize-e); font-weight: 800;">E賞</span>
         <span style="color: var(--text-secondary); font-size: 0.85rem;">50%</span>
       </div>
     </div>
@@ -112,13 +112,42 @@
         <div class="spinner"></div>
       </div>
     </div>
+
+    <!-- パック一覧下のリンクエリア -->
+    <div class="pack-footer-links">
+      <a href="/frontend/terms.html">利用規約</a>
+      <a href="/frontend/legal.html">特定商取引法に基づく表記</a>
+      <a href="/frontend/privacy.html">プライバシーポリシー</a>
+    </div>
   </div>
+
+  <!-- フッター（全ページ共通） -->
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a href="/frontend/terms.html">利用規約</a>
+      <a href="/frontend/legal.html">特定商取引法に基づく表記</a>
+      <a href="/frontend/privacy.html">プライバシーポリシー</a>
+    </div>
+    <p class="footer-copy">&copy; 2025 オリパガチャ All Rights Reserved.</p>
+  </footer>
 
   <script src="/frontend/js/app.js"></script>
   <script>
     // パック一覧を取得して表示するインラインスクリプト
     document.addEventListener('DOMContentLoaded', async () => {
       const container = document.getElementById('pack-grid');
+
+      // 賞ごとのカラーマッピング
+      const prizeColors = {
+        'A賞': '#ffd700',
+        'B賞': '#e879f9',
+        'C賞': '#a78bfa',
+        'D賞': '#38bdf8',
+        'E賞': '#94a3b8',
+      };
+
+      // 賞の表示順
+      const prizeOrder = ['A賞', 'B賞', 'C賞', 'D賞', 'E賞'];
 
       try {
         const packs = await apiGet('/packs/');
@@ -128,22 +157,24 @@
           return;
         }
 
-        const packEmojis = {
-          'スタンダードパック': '🎴',
-          'プレミアムパック': '💎',
-          '限定コレクションパック': '🌟',
-        };
-
         container.innerHTML = packs.map(pack => {
-          const emoji = packEmojis[pack.name] || '🃏';
           const stockPercent = (pack.stock / pack.max_stock) * 100;
           const isLow = stockPercent < 20;
+
+          // パック画像エリア（image_urlがあれば画像表示、なければグラデーション背景）
+          const packImageHTML = pack.image_url
+            ? `<img src="${pack.image_url}" alt="${pack.name}"
+                   style="width: 100%; height: 100%; object-fit: cover;">`
+            : `<span style="font-size: 4rem;">${getPackEmoji(pack.name)}</span>`;
+
+          // 賞別カード画像プレビュー（各賞の代表カードを表示）
+          const prizePreviewHTML = buildPrizePreview(pack.cards || [], prizeColors, prizeOrder);
 
           return `
             <div class="pack-card fade-in" onclick="window.location.href='/frontend/gacha.html?pack=${pack.id}'"
                  style="cursor: pointer;">
               <div class="pack-image">
-                <span>${emoji}</span>
+                ${packImageHTML}
                 ${pack.stock === 0 ? '<span class="badge-soldout">SOLD OUT</span>' : ''}
               </div>
               <div class="pack-body">
@@ -160,6 +191,7 @@
                   </div>
                 </div>
               </div>
+              ${prizePreviewHTML}
               <div class="pack-footer">
                 <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
                 ${pack.stock > 0
@@ -180,6 +212,54 @@
         `;
       }
     });
+
+    /**
+     * パック名から絵文字を返す
+     */
+    function getPackEmoji(name) {
+      if (name.includes('プレミアム')) return '💎';
+      if (name.includes('限定') || name.includes('コレクション')) return '🌟';
+      return '🎴';
+    }
+
+    /**
+     * 賞別カードプレビューHTMLを生成する
+     * @param {Array} cards - パックのカードリスト
+     * @param {Object} prizeColors - 賞ごとのカラーマップ
+     * @param {Array} prizeOrder - 賞の表示順
+     */
+    function buildPrizePreview(cards, prizeColors, prizeOrder) {
+      if (!cards || cards.length === 0) return '';
+
+      // 各賞の代表カード（最初の1枚）を取得
+      const prizeMap = {};
+      for (const card of cards) {
+        if (!prizeMap[card.rarity]) {
+          prizeMap[card.rarity] = card;
+        }
+      }
+
+      const items = prizeOrder.map(prize => {
+        const card = prizeMap[prize];
+        const color = prizeColors[prize] || '#666';
+        const imgHTML = card && card.image_url
+          ? `<img src="${card.image_url}" alt="${prize}" class="prize-preview-img"
+                  style="border-color: ${color};">`
+          : `<div class="prize-preview-placeholder"
+                  style="background: ${color}11; border-color: ${color}88;">
+               <span style="font-size: 0.9rem;">${prize[0]}</span>
+             </div>`;
+
+        return `
+          <div class="prize-preview-item">
+            ${imgHTML}
+            <span class="prize-preview-label" style="color: ${color};">${prize}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `<div class="pack-prize-preview">${items}</div>`;
+    }
   </script>
 </body>
 </html>

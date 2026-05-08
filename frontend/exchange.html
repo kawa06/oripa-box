@@ -47,11 +47,11 @@
     <div class="exchange-rate-table fade-in">
       <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--text-secondary);">変換レート</h3>
       <div class="rate-row">
-        <span style="color: var(--rarity-n);">N</span><span>→ 10 pt</span>
-        <span style="color: var(--rarity-r);">R</span><span>→ 30 pt</span>
-        <span style="color: var(--rarity-sr);">SR</span><span>→ 100 pt</span>
-        <span style="color: var(--rarity-ssr);">SSR</span><span>→ 300 pt</span>
-        <span style="color: var(--rarity-ur);">UR</span><span>→ 1000 pt</span>
+        <span style="color: var(--rarity-n);">E賞</span><span>→ 10 pt</span>
+        <span style="color: var(--rarity-r);">D賞</span><span>→ 30 pt</span>
+        <span style="color: var(--rarity-sr);">C賞</span><span>→ 100 pt</span>
+        <span style="color: var(--rarity-ssr);">B賞</span><span>→ 300 pt</span>
+        <span style="color: var(--rarity-ur);">A賞</span><span>→ 1000 pt</span>
       </div>
     </div>
 
@@ -75,11 +75,11 @@
       <!-- フィルター -->
       <div class="collection-filter" style="margin-bottom: 16px;">
         <button class="filter-btn active" onclick="filterShop('')" data-rarity="">すべて</button>
-        <button class="filter-btn" onclick="filterShop('UR')" data-rarity="UR">UR</button>
-        <button class="filter-btn" onclick="filterShop('SSR')" data-rarity="SSR">SSR</button>
-        <button class="filter-btn" onclick="filterShop('SR')" data-rarity="SR">SR</button>
-        <button class="filter-btn" onclick="filterShop('R')" data-rarity="R">R</button>
-        <button class="filter-btn" onclick="filterShop('N')" data-rarity="N">N</button>
+        <button class="filter-btn" onclick="filterShop('A賞')" data-rarity="A賞">A賞</button>
+        <button class="filter-btn" onclick="filterShop('B賞')" data-rarity="B賞">B賞</button>
+        <button class="filter-btn" onclick="filterShop('C賞')" data-rarity="C賞">C賞</button>
+        <button class="filter-btn" onclick="filterShop('D賞')" data-rarity="D賞">D賞</button>
+        <button class="filter-btn" onclick="filterShop('E賞')" data-rarity="E賞">E賞</button>
       </div>
       <div id="shop-grid" class="collection-grid">
         <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;"><div class="spinner"></div></div>

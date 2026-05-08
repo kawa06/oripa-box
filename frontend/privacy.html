@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プライバシーポリシー - オリパガチャ</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html">コレクション</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area"></div>
+    </div>
+  </nav>
+
+  <div class="main-content" style="max-width: 800px; margin: 0 auto;">
+    <div class="page-header fade-in">
+      <h1>プライバシーポリシー</h1>
+      <p>個人情報の取り扱いについて</p>
+    </div>
+
+    <div class="card fade-in" style="padding: 40px; line-height: 1.9; color: var(--text-secondary);">
+
+      <p style="margin-bottom: 24px;">
+        オリパガチャ（以下、「当サービス」）は、ユーザーの個人情報の取り扱いについて、
+        以下のとおりプライバシーポリシーを定めます。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        1. 収集する個人情報
+      </h2>
+      <p>当サービスでは、以下の情報を収集することがあります。</p>
+      <ul style="margin: 16px 0 16px 24px; list-style: disc;">
+        <li>メールアドレス</li>
+        <li>ユーザー名</li>
+        <li>サービス利用履歴（ガチャ履歴・コイン購入履歴など）</li>
+        <li>決済情報（Stripeを通じて処理され、当サービスはカード番号等を直接保有しません）</li>
+        <li>アクセスログ（IPアドレス、ブラウザ情報など）</li>
+      </ul>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        2. 個人情報の利用目的
+      </h2>
+      <p>収集した個人情報は、以下の目的のために利用します。</p>
+      <ul style="margin: 16px 0 16px 24px; list-style: disc;">
+        <li>サービスの提供・運営</li>
+        <li>ユーザー認証・アカウント管理</li>
+        <li>購入・決済処理</li>
+        <li>お問い合わせへの対応</li>
+        <li>サービス改善のための分析</li>
+        <li>法令に基づく対応</li>
+      </ul>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        3. 個人情報の第三者提供
+      </h2>
+      <p>
+        当サービスは、以下の場合を除き、ユーザーの個人情報を第三者に提供しません。
+      </p>
+      <ul style="margin: 16px 0 16px 24px; list-style: disc;">
+        <li>ユーザー本人の同意がある場合</li>
+        <li>法令に基づく場合</li>
+        <li>決済処理に必要な範囲でStripe Inc.に提供する場合</li>
+      </ul>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        4. Cookie・アクセス解析
+      </h2>
+      <p>
+        当サービスでは、ユーザー体験の向上のためCookieおよびアクセス解析ツールを使用することがあります。
+        Cookieの使用を希望されない場合は、ブラウザの設定によりCookieを無効にすることができますが、
+        一部機能が正常に動作しない場合があります。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        5. 個人情報の管理
+      </h2>
+      <p>
+        当サービスは、個人情報の正確性・安全性を確保するために、適切な管理措置を講じます。
+        パスワードはハッシュ化して保存し、通信はSSL/TLSにより暗号化されます。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        6. 個人情報の開示・訂正・削除
+      </h2>
+      <p>
+        ユーザーは、自身の個人情報の開示・訂正・削除を請求する権利を有します。
+        ご希望の方はお問い合わせページよりご連絡ください。
+        ご本人確認の後、合理的な範囲内で対応いたします。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        7. プライバシーポリシーの変更
+      </h2>
+      <p>
+        当サービスは、必要に応じて本ポリシーを改定することがあります。
+        重要な変更については、サービス内でお知らせします。
+        改定後もサービスを継続してご利用いただいた場合、変更後のポリシーに同意したものとみなします。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+        8. お問い合わせ
+      </h2>
+      <p>
+        本ポリシーに関するお問い合わせは、サービス内のお問い合わせフォームよりご連絡ください。
+      </p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 32px 0;">
+
+      <p style="font-size: 0.85rem; color: var(--text-secondary); opacity: 0.7;">
+        制定日：2025年1月1日<br>
+        最終改定日：2025年5月8日
+      </p>
+    </div>
+
+    <div style="text-align: center; margin-top: 32px; margin-bottom: 32px;">
+      <a href="/frontend/index.html" class="btn btn-outline">← トップページへ戻る</a>
+    </div>
+  </div>
+
+  <!-- フッター（app.jsで自動挿入） -->
+  <script src="/frontend/js/app.js"></script>
+</body>
+</html>

@@ -52,7 +52,7 @@ async function loadConvertCards() {
       return;
     }
 
-    const rarityPoints = { N: 10, R: 30, SR: 100, SSR: 300, UR: 1000 };
+    const rarityPoints = { 'E賞': 10, 'D賞': 30, 'C賞': 100, 'B賞': 300, 'A賞': 1000 };
     grid.innerHTML = cards.map(card => {
       const pts = rarityPoints[card.card_rarity] || 10;
       const imgTag = card.card_image_url

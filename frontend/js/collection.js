@@ -24,8 +24,8 @@ async function loadStats() {
   try {
     const stats = await apiGet('/collection/stats');
     const rarityColors = {
-      UR: 'var(--rarity-ur)', SSR: 'var(--rarity-ssr)',
-      SR: 'var(--rarity-sr)', R: 'var(--rarity-r)', N: 'var(--rarity-n)'
+      'A賞': 'var(--rarity-ur)', 'B賞': 'var(--rarity-ssr)',
+      'C賞': 'var(--rarity-sr)', 'D賞': 'var(--rarity-r)', 'E賞': 'var(--rarity-n)'
     };
     el.innerHTML = `
       <div class="stats-row">
@@ -33,10 +33,10 @@ async function loadStats() {
           <span class="stat-label">合計</span>
           <span class="stat-value">${stats.total}</span>
         </div>
-        ${['UR','SSR','SR','R','N'].map(r => `
+        ${['A賞','B賞','C賞','D賞','E賞'].map(r => `
           <div class="stat-item">
             <span class="stat-label" style="color: ${rarityColors[r]}">${r}</span>
-            <span class="stat-value" style="color: ${rarityColors[r]}">${stats[r]}</span>
+            <span class="stat-value" style="color: ${rarityColors[r]}">${stats[r] || 0}</span>
           </div>
         `).join('')}
       </div>
@@ -75,8 +75,8 @@ async function loadCollection(rarity) {
 
 function buildCollectionCard(card) {
   const rarityColors = {
-    UR: 'var(--rarity-ur)', SSR: 'var(--rarity-ssr)',
-    SR: 'var(--rarity-sr)', R: 'var(--rarity-r)', N: 'var(--rarity-n)'
+    'A賞': 'var(--rarity-ur)', 'B賞': 'var(--rarity-ssr)',
+    'C賞': 'var(--rarity-sr)', 'D賞': 'var(--rarity-r)', 'E賞': 'var(--rarity-n)'
   };
   const color = rarityColors[card.card_rarity] || '#fff';
   const imgTag = card.card_image_url
