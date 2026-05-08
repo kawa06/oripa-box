@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - ポイント交換所</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html">コレクション</a></li>
+      <li><a href="/frontend/history.html">履歴</a></li>
+      <li><a href="/frontend/exchange.html" class="active">交換所</a></li>
+      <li><a href="/frontend/ranking.html">ランキング</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+      <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html">管理</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>ポイント交換所</h1>
+      <p>被りカードをポイントに変換し、好きなカードと交換しよう</p>
+    </div>
+
+    <div id="exchange-alert" class="alert"></div>
+
+    <!-- ポイント残高 -->
+    <div class="exchange-point-bar fade-in">
+      <span style="color: var(--text-secondary);">現在のポイント残高</span>
+      <span class="exchange-point-value" id="point-balance-display">…</span>
+      <span style="color: var(--text-secondary);">pt</span>
+    </div>
+
+    <!-- レート表 -->
+    <div class="exchange-rate-table fade-in">
+      <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--text-secondary);">変換レート</h3>
+      <div class="rate-row">
+        <span style="color: var(--rarity-n);">N</span><span>→ 10 pt</span>
+        <span style="color: var(--rarity-r);">R</span><span>→ 30 pt</span>
+        <span style="color: var(--rarity-sr);">SR</span><span>→ 100 pt</span>
+        <span style="color: var(--rarity-ssr);">SSR</span><span>→ 300 pt</span>
+        <span style="color: var(--rarity-ur);">UR</span><span>→ 1000 pt</span>
+      </div>
+    </div>
+
+    <!-- タブ切り替え -->
+    <div class="tabs" style="margin: 32px 0 24px;">
+      <button class="tab-btn active" onclick="switchExchangeTab('convert')">カード→ポイント変換</button>
+      <button class="tab-btn" onclick="switchExchangeTab('shop')">ポイントでカード入手</button>
+    </div>
+
+    <!-- 変換タブ -->
+    <div id="tab-convert" class="tab-content">
+      <p style="color: var(--text-secondary); margin-bottom: 16px;">所持カードをポイントに変換します。</p>
+      <div id="convert-grid" class="collection-grid">
+        <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ショップタブ -->
+    <div id="tab-shop" class="tab-content hidden">
+      <p style="color: var(--text-secondary); margin-bottom: 8px;">ポイントを消費してカードを入手します。</p>
+      <!-- フィルター -->
+      <div class="collection-filter" style="margin-bottom: 16px;">
+        <button class="filter-btn active" onclick="filterShop('')" data-rarity="">すべて</button>
+        <button class="filter-btn" onclick="filterShop('UR')" data-rarity="UR">UR</button>
+        <button class="filter-btn" onclick="filterShop('SSR')" data-rarity="SSR">SSR</button>
+        <button class="filter-btn" onclick="filterShop('SR')" data-rarity="SR">SR</button>
+        <button class="filter-btn" onclick="filterShop('R')" data-rarity="R">R</button>
+        <button class="filter-btn" onclick="filterShop('N')" data-rarity="N">N</button>
+      </div>
+      <div id="shop-grid" class="collection-grid">
+        <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/exchange.js"></script>
+</body>
+</html>

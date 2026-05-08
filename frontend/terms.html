@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - 利用規約</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html">コレクション</a></li>
+      <li><a href="/frontend/history.html">履歴</a></li>
+      <li><a href="/frontend/exchange.html">交換所</a></li>
+      <li><a href="/frontend/ranking.html">ランキング</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+      <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html">管理</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>利用規約</h1>
+      <p>オリパガチャをご利用いただく前にお読みください</p>
+    </div>
+
+    <div class="legal-container fade-in">
+      <p class="legal-update">最終更新日：2025年1月1日</p>
+
+      <section class="legal-section">
+        <h2>第1条（本規約の適用）</h2>
+        <p>本利用規約（以下「本規約」といいます）は、オリパガチャ（以下「本サービス」といいます）の利用条件を定めるものです。ユーザーの皆さまは、本規約に同意のうえ、本サービスをご利用ください。</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>第2条（利用登録）</h2>
+        <p>本サービスの利用を希望する方は、本規約に同意した上で、当社の定める方法によりアカウント登録を完了することで、本サービスを利用できます。</p>
+        <ul>
+          <li>18歳未満の方は保護者の同意を得た上でご利用ください</li>
+          <li>一人につき一アカウントのみ登録可能です</li>
+          <li>他者になりすましたアカウント登録は禁止します</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>第3条（仮想コインについて）</h2>
+        <p>本サービス内で使用するコインは、現実通貨との交換はできない仮想通貨です。</p>
+        <ul>
+          <li>コインは本サービス内でのみ使用可能です</li>
+          <li>購入済みコインの払い戻しは原則として行いません</li>
+          <li>サービス終了時にはコインは失効します</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>第4条（ガチャについて）</h2>
+        <p>ガチャで排出されるカードは確率に基づく抽選で決定されます。特定のカードの排出は保証しません（天井システムを除く）。</p>
+        <ul>
+          <li>各カードの排出確率は画面上に表示します</li>
+          <li>50回連続でUR未排出の場合、次の1回でURが確定します（天井システム）</li>
+          <li>排出されたカードの返品・交換はできません</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>第5条（禁止事項）</h2>
+        <p>ユーザーは以下の行為を行ってはなりません。</p>
+        <ul>
+          <li>不正アクセスやシステムへの攻撃</li>
+          <li>複数アカウントの作成・運用</li>
+          <li>本サービスのコンテンツの無断転載・複製</li>
+          <li>他ユーザーへの迷惑行為</li>
+          <li>法令に違反する行為</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>第6条（免責事項）</h2>
+        <p>当社は、本サービスに起因してユーザーに生じたいかなる損害についても、当社の故意または重大な過失による場合を除き、責任を負いません。</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>第7条（サービスの変更・終了）</h2>
+        <p>当社は、ユーザーに事前に通知することなく、本サービスの内容を変更し、または本サービスの提供を終了することがあります。</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>第8条（規約の変更）</h2>
+        <p>当社は、必要と判断した場合には、ユーザーに通知することなく、いつでも本規約を変更することができます。変更後の本規約は、本サービス上に掲示した時点から効力を生じます。</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>第9条（準拠法・裁判管轄）</h2>
+        <p>本規約の解釈にあたっては、日本法を準拠法とします。本サービスに関して紛争が生じた場合には、東京地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
+      </section>
+
+      <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-wrap: wrap;">
+        <a href="/frontend/legal.html" style="color: var(--accent-purple); text-decoration: none;">特定商取引法に基づく表記</a>
+        <a href="/frontend/index.html" style="color: var(--text-secondary); text-decoration: none;">トップページへ戻る</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getUser();
+      if (user && user.is_admin) {
+        const adminLink = document.getElementById('nav-admin-link');
+        if (adminLink) adminLink.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 import os
 
 from backend.database import engine, Base
-from backend.routes import auth, gacha, coins, packs
+from backend.routes import auth, gacha, coins, packs, admin, collection, exchange, ranking
 from backend import config
 
 # テーブルが存在しない場合は自動作成
@@ -36,6 +36,10 @@ app.include_router(auth.router)
 app.include_router(packs.router)
 app.include_router(gacha.router)
 app.include_router(coins.router)
+app.include_router(admin.router)
+app.include_router(collection.router)
+app.include_router(exchange.router)
+app.include_router(ranking.router)
 
 # フロントエンドの静的ファイルを配信
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
@@ -49,6 +53,49 @@ def root():
     ルートにアクセスするとフロントエンドのトップページにリダイレクト
     """
     return FileResponse(os.path.join(frontend_path, "index.html"))
+
+
+# 新規フロントエンドページへのルーティング
+@app.get("/admin")
+def admin_page():
+    """管理画面"""
+    return FileResponse(os.path.join(frontend_path, "admin.html"))
+
+
+@app.get("/collection")
+def collection_page():
+    """コレクション画面"""
+    return FileResponse(os.path.join(frontend_path, "collection.html"))
+
+
+@app.get("/history")
+def history_page():
+    """ガチャ履歴画面"""
+    return FileResponse(os.path.join(frontend_path, "history.html"))
+
+
+@app.get("/exchange")
+def exchange_page():
+    """ポイント交換画面"""
+    return FileResponse(os.path.join(frontend_path, "exchange.html"))
+
+
+@app.get("/ranking")
+def ranking_page():
+    """ランキング画面"""
+    return FileResponse(os.path.join(frontend_path, "ranking.html"))
+
+
+@app.get("/terms")
+def terms_page():
+    """利用規約画面"""
+    return FileResponse(os.path.join(frontend_path, "terms.html"))
+
+
+@app.get("/legal")
+def legal_page():
+    """特定商取引法に基づく表記"""
+    return FileResponse(os.path.join(frontend_path, "legal.html"))
 
 
 @app.get("/health")

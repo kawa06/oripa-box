@@ -21,11 +21,15 @@ class User(Base):
     hashed_password = Column(String, nullable=False)  # ハッシュ化パスワード
     coin_balance = Column(Integer, default=0, nullable=False)  # コイン残高
     is_active = Column(Boolean, default=True)  # アカウント有効フラグ
+    is_admin = Column(Boolean, default=False)  # 管理者フラグ
+    points = Column(Integer, default=0, nullable=False)  # 交換ポイント残高
     created_at = Column(DateTime, default=datetime.utcnow)  # 作成日時
 
     # リレーション
     coin_transactions = relationship("CoinTransaction", back_populates="user")
     gacha_results = relationship("GachaResult", back_populates="user")
+    pity_counters = relationship("PityCounter", back_populates="user")
+    user_cards = relationship("UserCard", back_populates="user")
 
 
 class Pack(Base):
@@ -45,6 +49,7 @@ class Pack(Base):
     # リレーション
     cards = relationship("Card", back_populates="pack")
     gacha_results = relationship("GachaResult", back_populates="pack")
+    pity_counters = relationship("PityCounter", back_populates="pack")
 
 
 class Card(Base):
@@ -61,6 +66,7 @@ class Card(Base):
 
     # リレーション
     pack = relationship("Pack", back_populates="cards")
+    user_cards = relationship("UserCard", back_populates="card")
 
 
 class GachaResult(Base):
@@ -94,3 +100,36 @@ class CoinTransaction(Base):
 
     # リレーション
     user = relationship("User", back_populates="coin_transactions")
+
+
+class PityCounter(Base):
+    """天井（ピティ）カウンターモデル
+    ユーザーがパックごとに何回ガチャを引いたかを記録する
+    50回でUR確定
+    """
+    __tablename__ = "pity_counters"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ユーザー
+    pack_id = Column(Integer, ForeignKey("packs.id"), nullable=False)  # パック
+    count = Column(Integer, default=0, nullable=False)  # 天井カウント（UR排出でリセット）
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # リレーション
+    user = relationship("User", back_populates="pity_counters")
+    pack = relationship("Pack", back_populates="pity_counters")
+
+
+class UserCard(Base):
+    """ユーザー所持カードモデル（コレクション）"""
+    __tablename__ = "user_cards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ユーザー
+    card_id = Column(Integer, ForeignKey("cards.id"), nullable=False)  # カード
+    count = Column(Integer, default=1, nullable=False)  # 所持枚数
+    obtained_at = Column(DateTime, default=datetime.utcnow)  # 最初に入手した日時
+
+    # リレーション
+    user = relationship("User", back_populates="user_cards")
+    card = relationship("Card", back_populates="user_cards")

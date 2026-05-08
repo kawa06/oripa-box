@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - 特定商取引法に基づく表記</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html">コレクション</a></li>
+      <li><a href="/frontend/history.html">履歴</a></li>
+      <li><a href="/frontend/exchange.html">交換所</a></li>
+      <li><a href="/frontend/ranking.html">ランキング</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+      <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html">管理</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>特定商取引法に基づく表記</h1>
+      <p>特定商取引法第11条に基づく表示</p>
+    </div>
+
+    <div class="legal-container fade-in">
+      <p class="legal-update">最終更新日：2025年1月1日</p>
+
+      <table class="legal-table">
+        <tbody>
+          <tr>
+            <th>販売業者</th>
+            <td>オリパガチャ運営事務局</td>
+          </tr>
+          <tr>
+            <th>運営統括責任者</th>
+            <td>代表取締役 山田 太郎</td>
+          </tr>
+          <tr>
+            <th>所在地</th>
+            <td>
+              〒100-0001 東京都千代田区千代田1-1-1 XXビル 5階<br>
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">※請求があった場合には遅滞なく開示します</span>
+            </td>
+          </tr>
+          <tr>
+            <th>電話番号</th>
+            <td>
+              03-0000-0000<br>
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">受付時間: 平日10:00〜18:00（土日祝休）</span>
+            </td>
+          </tr>
+          <tr>
+            <th>メールアドレス</th>
+            <td>support@oripa-gacha.example.com</td>
+          </tr>
+          <tr>
+            <th>販売価格</th>
+            <td>
+              各コインパックの価格は購入画面に表示します。<br>
+              100コイン: 500円（税込）<br>
+              500コイン: 2,000円（税込）<br>
+              1,000コイン: 3,500円（税込）
+            </td>
+          </tr>
+          <tr>
+            <th>販売価格以外に発生する費用</th>
+            <td>インターネット通信料（お客様負担）</td>
+          </tr>
+          <tr>
+            <th>お支払い方法</th>
+            <td>クレジットカード（Stripe 経由）</td>
+          </tr>
+          <tr>
+            <th>お支払い時期</th>
+            <td>購入手続き完了時（即時決済）</td>
+          </tr>
+          <tr>
+            <th>商品の引渡し時期</th>
+            <td>決済完了後、即時にコインが付与されます</td>
+          </tr>
+          <tr>
+            <th>返品・キャンセルについて</th>
+            <td>
+              デジタルコンテンツの性質上、購入完了後の返品・返金には応じられません。<br>
+              ただし、法令で定める場合はこの限りではありません。
+            </td>
+          </tr>
+          <tr>
+            <th>動作環境</th>
+            <td>
+              最新版のGoogle Chrome、Mozilla Firefox、Microsoft Edge、Safari<br>
+              インターネット接続が必要です
+            </td>
+          </tr>
+          <tr>
+            <th>サービス提供時間</th>
+            <td>24時間365日（メンテナンス時を除く）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-wrap: wrap;">
+        <a href="/frontend/terms.html" style="color: var(--accent-purple); text-decoration: none;">利用規約</a>
+        <a href="/frontend/index.html" style="color: var(--text-secondary); text-decoration: none;">トップページへ戻る</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getUser();
+      if (user && user.is_admin) {
+        const adminLink = document.getElementById('nav-admin-link');
+        if (adminLink) adminLink.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

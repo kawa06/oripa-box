@@ -193,6 +193,12 @@ async function updateNavbar() {
       `;
     }
 
+    // 管理者の場合はナビに管理リンクを表示
+    if (user.is_admin) {
+      const adminLink = document.getElementById('nav-admin-link');
+      if (adminLink) adminLink.classList.remove('hidden');
+    }
+
     // 最新のコイン残高をAPIから取得して更新
     try {
       const balanceData = await apiGet('/coins/balance');

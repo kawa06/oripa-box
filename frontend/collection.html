@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - コレクション</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html" class="active">コレクション</a></li>
+      <li><a href="/frontend/history.html">履歴</a></li>
+      <li><a href="/frontend/exchange.html">交換所</a></li>
+      <li><a href="/frontend/ranking.html">ランキング</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+      <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html">管理</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>コレクション</h1>
+      <p>あなたが所持しているカード一覧</p>
+    </div>
+
+    <!-- 統計バー -->
+    <div id="collection-stats" class="collection-stats fade-in">
+      <div class="flex-center" style="padding: 20px;"><div class="spinner"></div></div>
+    </div>
+
+    <!-- フィルターバー -->
+    <div class="collection-filter fade-in">
+      <button class="filter-btn active" onclick="filterCollection('')" data-rarity="">すべて</button>
+      <button class="filter-btn" onclick="filterCollection('UR')" data-rarity="UR">UR</button>
+      <button class="filter-btn" onclick="filterCollection('SSR')" data-rarity="SSR">SSR</button>
+      <button class="filter-btn" onclick="filterCollection('SR')" data-rarity="SR">SR</button>
+      <button class="filter-btn" onclick="filterCollection('R')" data-rarity="R">R</button>
+      <button class="filter-btn" onclick="filterCollection('N')" data-rarity="N">N</button>
+    </div>
+
+    <!-- カードグリッド -->
+    <div id="collection-grid" class="collection-grid">
+      <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/collection.js"></script>
+</body>
+</html>

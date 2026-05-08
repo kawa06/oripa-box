@@ -2,8 +2,10 @@
 ガチャルート
 ガチャ実行APIエンドポイント
 確率に基づいてカードを抽選し、コインを消費する
+天井（ピティ）システム: 50回引いたらUR確定
 """
 import random
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
@@ -11,6 +13,9 @@ from backend import models, schemas
 from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/gacha", tags=["ガチャ"])
+
+# 天井回数（この回数引いたらUR確定）
+PITY_LIMIT = 50
 
 # レアリティの基本確率定義（合計100%）
 RARITY_PROBABILITIES = {
@@ -36,6 +41,37 @@ def draw_card(cards: list) -> models.Card:
     return selected
 
 
+def draw_ur_card(cards: list) -> models.Card:
+    """
+    URカードのみから抽選する（天井発動時）
+    URカードが存在しない場合は最高レアリティから抽選
+    """
+    ur_cards = [c for c in cards if c.rarity == "UR"]
+    if ur_cards:
+        return random.choice(ur_cards)
+    # UR が無い場合は SSR から抽選
+    ssr_cards = [c for c in cards if c.rarity == "SSR"]
+    if ssr_cards:
+        return random.choice(ssr_cards)
+    # それも無い場合は通常抽選
+    return draw_card(cards)
+
+
+def get_or_create_pity(db: Session, user_id: int, pack_id: int) -> models.PityCounter:
+    """天井カウンターを取得する。存在しない場合は新規作成する"""
+    pity = db.query(models.PityCounter).filter(
+        models.PityCounter.user_id == user_id,
+        models.PityCounter.pack_id == pack_id
+    ).first()
+
+    if not pity:
+        pity = models.PityCounter(user_id=user_id, pack_id=pack_id, count=0)
+        db.add(pity)
+        db.flush()
+
+    return pity
+
+
 @router.post("/draw", response_model=schemas.GachaResultResponse)
 def draw_gacha(
     request: schemas.GachaRequest,
@@ -47,6 +83,8 @@ def draw_gacha(
     - コインを消費してパックからカードを1枚抽選
     - 在庫を1減らす
     - 結果をDBに記録する
+    - 天井システム: 50回でUR確定、UR排出でカウンターリセット
+    - コレクションに追加（UserCard テーブル）
     """
     # パック取得（在庫チェック含む）
     pack = db.query(models.Pack).filter(
@@ -85,8 +123,24 @@ def draw_gacha(
             detail="パックにカードが設定されていません"
         )
 
-    # カード抽選
-    drawn_card = draw_card(cards)
+    # 天井カウンター取得
+    pity = get_or_create_pity(db, current_user.id, pack.id)
+    pity_triggered = False
+
+    # 天井発動チェック（PITY_LIMIT回に達したらUR確定）
+    if pity.count >= PITY_LIMIT - 1:
+        drawn_card = draw_ur_card(cards)
+        pity_triggered = True
+    else:
+        drawn_card = draw_card(cards)
+
+    # UR排出時は天井カウンターをリセット
+    if drawn_card.rarity == "UR":
+        pity.count = 0
+    else:
+        pity.count += 1
+
+    pity.updated_at = datetime.utcnow()
 
     # コインを消費
     current_user.coin_balance -= pack.price_coins
@@ -112,15 +166,33 @@ def draw_gacha(
     )
     db.add(coin_transaction)
 
+    # コレクション（UserCard）に追加
+    existing_uc = db.query(models.UserCard).filter(
+        models.UserCard.user_id == current_user.id,
+        models.UserCard.card_id == drawn_card.id
+    ).first()
+
+    if existing_uc:
+        existing_uc.count += 1
+    else:
+        db.add(models.UserCard(
+            user_id=current_user.id,
+            card_id=drawn_card.id,
+            count=1
+        ))
+
     db.commit()
     db.refresh(current_user)
     db.refresh(pack)
+    db.refresh(pity)
 
     return schemas.GachaResultResponse(
         card=drawn_card,
         coins_spent=pack.price_coins,
         remaining_balance=current_user.coin_balance,
-        pack_remaining_stock=pack.stock
+        pack_remaining_stock=pack.stock,
+        pity_count=pity.count,
+        pity_triggered=pity_triggered
     )
 
 
@@ -149,3 +221,26 @@ def get_gacha_history(
         })
 
     return history
+
+
+@router.get("/pity/{pack_id}")
+def get_pity_count(
+    pack_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    指定パックの天井カウンターを返す
+    """
+    pity = db.query(models.PityCounter).filter(
+        models.PityCounter.user_id == current_user.id,
+        models.PityCounter.pack_id == pack_id
+    ).first()
+
+    count = pity.count if pity else 0
+    return {
+        "pack_id": pack_id,
+        "pity_count": count,
+        "pity_limit": PITY_LIMIT,
+        "remaining_until_pity": PITY_LIMIT - count
+    }

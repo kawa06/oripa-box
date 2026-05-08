@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリパガチャ - 管理画面</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+  <!-- ナビゲーションバー -->
+  <nav class="navbar">
+    <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <ul class="navbar-nav">
+      <li><a href="/frontend/index.html">パック一覧</a></li>
+      <li><a href="/frontend/gacha.html">ガチャ</a></li>
+      <li><a href="/frontend/collection.html">コレクション</a></li>
+      <li><a href="/frontend/history.html">履歴</a></li>
+      <li><a href="/frontend/exchange.html">交換所</a></li>
+      <li><a href="/frontend/ranking.html">ランキング</a></li>
+      <li><a href="/frontend/coins.html">コイン購入</a></li>
+      <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html" class="active">管理</a></li>
+    </ul>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-display hidden">
+        <span id="coin-balance-display">0</span>コイン
+      </div>
+      <div id="nav-auth-area" style="display: flex; gap: 8px; align-items: center;"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="page-header fade-in">
+      <h1>管理画面</h1>
+      <p>パック・カード・ユーザーの管理</p>
+    </div>
+
+    <div id="admin-alert" class="alert"></div>
+
+    <!-- タブナビゲーション -->
+    <div class="tabs" style="margin-bottom: 32px;">
+      <button class="tab-btn active" onclick="switchTab('users')">ユーザー管理</button>
+      <button class="tab-btn" onclick="switchTab('packs')">パック管理</button>
+      <button class="tab-btn" onclick="switchTab('cards')">カード管理</button>
+    </div>
+
+    <!-- ===== ユーザー管理タブ ===== -->
+    <div id="tab-users" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700;">ユーザー一覧</h2>
+        <button class="btn btn-primary" onclick="loadUsers()" style="padding: 8px 16px; font-size: 0.9rem;">更新</button>
+      </div>
+      <div id="users-table-wrap" class="admin-table-wrap">
+        <div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- コイン付与モーダル -->
+    <div id="grant-coin-modal" class="admin-modal hidden">
+      <div class="admin-modal-inner">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">コインを付与</h3>
+        <p id="grant-target-name" style="color: var(--text-secondary); margin-bottom: 16px;"></p>
+        <input type="number" id="grant-amount" class="form-input" placeholder="付与するコイン数" min="1" style="margin-bottom: 12px;">
+        <input type="text" id="grant-desc" class="form-input" placeholder="説明（任意）" style="margin-bottom: 16px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="submitGrantCoins()" style="flex:1;">付与する</button>
+          <button class="btn btn-outline" onclick="closeGrantModal()" style="flex:1;">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== パック管理タブ ===== -->
+    <div id="tab-packs" class="tab-content hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700;">パック一覧</h2>
+        <button class="btn btn-primary" onclick="openPackModal()" style="padding: 8px 16px; font-size: 0.9rem;">+ 新規追加</button>
+      </div>
+      <div id="packs-table-wrap" class="admin-table-wrap">
+        <div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- パック編集モーダル -->
+    <div id="pack-modal" class="admin-modal hidden">
+      <div class="admin-modal-inner" style="max-width: 500px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;" id="pack-modal-title">パック追加</h3>
+        <input type="hidden" id="pack-edit-id">
+        <div class="form-group">
+          <label class="form-label">パック名 *</label>
+          <input type="text" id="pack-name" class="form-input" placeholder="例: スタンダードパック">
+        </div>
+        <div class="form-group">
+          <label class="form-label">説明</label>
+          <textarea id="pack-desc" class="form-input" rows="2" placeholder="パックの説明"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">必要コイン *</label>
+          <input type="number" id="pack-price" class="form-input" placeholder="例: 100" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">在庫数</label>
+          <input type="number" id="pack-stock" class="form-input" placeholder="例: 100" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">最大在庫数</label>
+          <input type="number" id="pack-max-stock" class="form-input" placeholder="例: 100" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">画像URL</label>
+          <input type="text" id="pack-image-url" class="form-input" placeholder="https://...">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="pack-is-active" checked style="width: auto;">
+          <label for="pack-is-active" class="form-label" style="margin-bottom: 0;">公開中</label>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button class="btn btn-primary" onclick="submitPackForm()" style="flex:1;">保存</button>
+          <button class="btn btn-outline" onclick="closePackModal()" style="flex:1;">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== カード管理タブ ===== -->
+    <div id="tab-cards" class="tab-content hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700;">カード一覧</h2>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <select id="card-pack-filter" class="form-input" style="width: auto; padding: 8px 12px;" onchange="loadCards()">
+            <option value="">全パック</option>
+          </select>
+          <button class="btn btn-primary" onclick="openCardModal()" style="padding: 8px 16px; font-size: 0.9rem;">+ 新規追加</button>
+        </div>
+      </div>
+      <div id="cards-table-wrap" class="admin-table-wrap">
+        <div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- カード編集モーダル -->
+    <div id="card-modal" class="admin-modal hidden">
+      <div class="admin-modal-inner" style="max-width: 500px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;" id="card-modal-title">カード追加</h3>
+        <input type="hidden" id="card-edit-id">
+        <div class="form-group">
+          <label class="form-label">パック *</label>
+          <select id="card-pack-id" class="form-input"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">カード名 *</label>
+          <input type="text" id="card-name" class="form-input" placeholder="例: 神龍カイザー">
+        </div>
+        <div class="form-group">
+          <label class="form-label">レアリティ *</label>
+          <select id="card-rarity" class="form-input">
+            <option value="N">N</option>
+            <option value="R">R</option>
+            <option value="SR">SR</option>
+            <option value="SSR">SSR</option>
+            <option value="UR">UR</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">排出確率 (0.0〜1.0) *</label>
+          <input type="number" id="card-probability" class="form-input" placeholder="例: 0.05" step="0.001" min="0" max="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">画像URL</label>
+          <input type="text" id="card-image-url" class="form-input" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">説明</label>
+          <textarea id="card-description" class="form-input" rows="2" placeholder="カードの説明"></textarea>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button class="btn btn-primary" onclick="submitCardForm()" style="flex:1;">保存</button>
+          <button class="btn btn-outline" onclick="closeCardModal()" style="flex:1;">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/frontend/js/app.js"></script>
+  <script src="/frontend/js/admin.js"></script>
+</body>
+</html>
