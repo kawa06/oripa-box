@@ -436,6 +436,11 @@ function buildExistingCardRow(card, prizeKey) {
   probEl.style.cssText = 'font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;';
   probEl.textContent = `${(card.probability * 100).toFixed(2)}%`;
 
+  // コイン変換レート表示（設定済みの場合のみ表示）
+  const coinEl = document.createElement('span');
+  coinEl.style.cssText = 'font-size:0.78rem; color:var(--accent-gold, #f9d923); white-space:nowrap;';
+  coinEl.textContent = card.coin_value != null ? `${card.coin_value}コイン` : '';
+
   const delBtn = document.createElement('button');
   delBtn.className = 'btn btn-danger';
   delBtn.style.cssText = 'padding:2px 8px; font-size:0.75rem; white-space:nowrap;';
@@ -445,6 +450,7 @@ function buildExistingCardRow(card, prizeKey) {
   row.appendChild(imgWrap);
   row.appendChild(nameEl);
   row.appendChild(probEl);
+  row.appendChild(coinEl);
   row.appendChild(delBtn);
   return row;
 }
@@ -473,6 +479,9 @@ function addCardRowToPrize(prizeKey, packId) {
     <input type="text" placeholder="画像URL (任意)"
       style="flex:3; min-width:140px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
       class="new-card-image-url">
+    <input type="number" min="1" placeholder="コイン数(任意)"
+      style="width:110px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+      class="new-card-coin-value">
     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;"
       onclick="saveNewCardRow('${rowId}', '${prizeKey}', ${packId})">保存</button>
     <button class="btn btn-outline" style="padding:4px 10px; font-size:0.8rem;"
@@ -493,8 +502,10 @@ async function saveNewCardRow(rowId, prizeKey, packId) {
 
   const nameInput = row.querySelector('.new-card-name');
   const imageInput = row.querySelector('.new-card-image-url');
+  const coinInput = row.querySelector('.new-card-coin-value');
   const name = nameInput.value.trim();
   const imageUrl = imageInput.value.trim();
+  const coinValueRaw = coinInput ? coinInput.value.trim() : '';
 
   if (!name) {
     nameInput.style.borderColor = 'var(--error)';
@@ -517,7 +528,9 @@ async function saveNewCardRow(rowId, prizeKey, packId) {
         rarity: prizeKey,
         probability,
         image_url: imageUrl || null,
-        description: null
+        description: null,
+        // 空欄ならnull（賞別デフォルト値を使用）
+        coin_value: coinValueRaw !== '' ? parseInt(coinValueRaw, 10) : null,
       })
     });
 
@@ -598,7 +611,7 @@ async function loadCards() {
     wrap.innerHTML = `
       <table class="admin-table">
         <thead><tr>
-          <th>ID</th><th>パック</th><th>カード名</th><th>レアリティ</th><th>確率</th><th>操作</th>
+          <th>ID</th><th>パック</th><th>カード名</th><th>レアリティ</th><th>確率</th><th>変換コイン</th><th>操作</th>
         </tr></thead>
         <tbody>
           ${cards.map(c => `
@@ -608,6 +621,7 @@ async function loadCards() {
               <td>${escapeHtml(c.name)}</td>
               <td><span style="color: ${rarityColors[c.rarity] || '#fff'}; font-weight: 700;">${c.rarity}</span></td>
               <td>${(c.probability * 100).toFixed(2)}%</td>
+              <td style="color: var(--accent-gold, #f9d923);">${c.coin_value != null ? c.coin_value + 'コイン' : '<span style="color:var(--text-secondary)">デフォルト</span>'}</td>
               <td style="display: flex; gap: 4px;">
                 <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;"
                   onclick='openCardModal(${JSON.stringify(c)})'>編集</button>
@@ -638,6 +652,8 @@ function openCardModal(card = null) {
     document.getElementById('card-probability').value = card.probability;
     document.getElementById('card-image-url').value = card.image_url || '';
     document.getElementById('card-description').value = card.description || '';
+    // コイン変換レート（null の場合は空欄＝デフォルト値使用）
+    document.getElementById('card-coin-value').value = card.coin_value != null ? card.coin_value : '';
   } else {
     title.textContent = 'カード追加';
     document.getElementById('card-name').value = '';
@@ -645,6 +661,7 @@ function openCardModal(card = null) {
     document.getElementById('card-probability').value = '';
     document.getElementById('card-image-url').value = '';
     document.getElementById('card-description').value = '';
+    document.getElementById('card-coin-value').value = '';
   }
   modal.classList.remove('hidden');
 }
@@ -655,13 +672,16 @@ function closeCardModal() {
 
 async function submitCardForm() {
   const cardId = document.getElementById('card-edit-id').value;
+  const coinValueRaw = document.getElementById('card-coin-value').value.trim();
   const body = {
     pack_id: parseInt(document.getElementById('card-pack-id').value),
     name: document.getElementById('card-name').value,
     rarity: document.getElementById('card-rarity').value,
     probability: parseFloat(document.getElementById('card-probability').value),
     image_url: document.getElementById('card-image-url').value || null,
-    description: document.getElementById('card-description').value || null
+    description: document.getElementById('card-description').value || null,
+    // 空欄ならnull（賞別デフォルト値を使用）、入力があれば整数に変換
+    coin_value: coinValueRaw !== '' ? parseInt(coinValueRaw, 10) : null,
   };
 
   if (!body.name || !body.probability) {

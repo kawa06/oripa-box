@@ -69,6 +69,8 @@ class Card(Base):
     probability = Column(Float, nullable=False)  # 排出確率（0.0〜1.0）
     image_url = Column(String)  # カード画像URL
     description = Column(Text)  # カード説明
+    # コイン変換時の獲得コイン数（Noneの場合は賞ごとのデフォルト値を使用）
+    coin_value = Column(Integer, nullable=True)
 
     # リレーション
     pack = relationship("Pack", back_populates="cards")

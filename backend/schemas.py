@@ -55,6 +55,8 @@ class CardResponse(BaseModel):
     probability: float
     image_url: Optional[str] = None
     description: Optional[str] = None
+    # コイン変換レート（Noneの場合はフロントエンドがデフォルト値を使用）
+    coin_value: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -250,6 +252,8 @@ class AdminCardCreate(BaseModel):
     probability: float
     image_url: Optional[str] = None
     description: Optional[str] = None
+    # コイン変換レート（Noneの場合は賞別デフォルト値を使用）
+    coin_value: Optional[int] = None
 
 
 class AdminCardUpdate(BaseModel):
@@ -259,6 +263,8 @@ class AdminCardUpdate(BaseModel):
     probability: Optional[float] = None
     image_url: Optional[str] = None
     description: Optional[str] = None
+    # コイン変換レート（Noneの場合は賞別デフォルト値を使用）
+    coin_value: Optional[int] = None
 
 
 # ===== ランキング関連スキーマ =====

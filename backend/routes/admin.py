@@ -163,7 +163,9 @@ def list_all_cards(
             "rarity": card.rarity,
             "probability": card.probability,
             "image_url": card.image_url,
-            "description": card.description
+            "description": card.description,
+            # カード固有のコイン変換レート（Noneの場合は賞別デフォルト値を使用）
+            "coin_value": card.coin_value,
         })
     return result
 
@@ -199,9 +201,15 @@ def update_card(
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="カードが見つかりません")
 
+    # Noneでないフィールドのみ更新（coin_value は明示的にNullを許可するため別途処理）
     update_data = card_data.dict(exclude_none=True)
     for key, value in update_data.items():
         setattr(card, key, value)
+
+    # coin_value はリクエストに明示的に含まれていればNullも許可（レート削除対応）
+    if "coin_value" in card_data.dict(exclude_unset=False) and card_data.coin_value is None:
+        # リクエストに coin_value=null が含まれている場合はデフォルト値使用に戻す
+        card.coin_value = None
 
     db.commit()
     db.refresh(card)

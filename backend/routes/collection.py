@@ -57,8 +57,8 @@ def get_collection(
             "count": uc.count,
             "status": uc.status,
             "obtained_at": uc.obtained_at.isoformat(),
-            # コイン変換時の獲得コイン数（フロントエンド表示用）
-            "coin_value": COIN_RATES.get(uc.card.rarity, 10),
+            # コイン変換時の獲得コイン数（カード固有値があればそちらを優先）
+            "coin_value": uc.card.coin_value if uc.card.coin_value is not None else COIN_RATES.get(uc.card.rarity, 10),
         })
 
     return result
@@ -112,9 +112,9 @@ def convert_to_coins(
             detail="このカードは現在変換できません（発送申請中または発送済み）"
         )
 
-    # コイン変換レートを取得
+    # コイン変換レートを取得（カード固有値 → 賞別デフォルト値の順に参照）
     rarity = user_card.card.rarity
-    coins = COIN_RATES.get(rarity, 10)
+    coins = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
 
     # コインを付与
     current_user.coin_balance += coins

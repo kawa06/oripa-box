@@ -29,6 +29,8 @@ _MISSING_COLUMNS = [
     ("cards", "image_url",    "TEXT"),
     # UserCard に status カラムを追加（owned/shipping_requested/shipped）
     ("user_cards", "status",  "TEXT DEFAULT 'owned' NOT NULL"),
+    # Card に coin_value カラムを追加（コイン変換レート、NULLの場合はデフォルト値を使用）
+    ("cards", "coin_value",   "INTEGER"),
 ]
 
 _raw_conn = engine.raw_connection()
