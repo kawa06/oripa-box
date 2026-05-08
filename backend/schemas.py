@@ -344,3 +344,16 @@ class ConvertToCoinsRequest(BaseModel):
 class ShippingStatusUpdate(BaseModel):
     """発送ステータス更新リクエスト（管理者用）"""
     status: str  # pending/shipped/completed
+
+
+# ===== 一括操作関連スキーマ =====
+
+class BulkConvertRequest(BaseModel):
+    """複数カードを一括コイン変換するリクエスト"""
+    card_ids: List[int]  # 変換するユーザーカードIDの配列
+
+
+class BulkShipRequest(BaseModel):
+    """複数カードを一括発送申請するリクエスト"""
+    card_ids: List[int]   # 発送申請するユーザーカードIDの配列
+    address_id: int       # 発送先住所ID

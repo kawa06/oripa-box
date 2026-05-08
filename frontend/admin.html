@@ -131,7 +131,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">画像URL</label>
-          <input type="text" id="pack-image-url" class="form-input" placeholder="https://...">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="pack-image-url" class="form-input" placeholder="https://...">
+            <button type="button" class="btn btn-outline" style="white-space:nowrap; padding: 8px 12px; font-size: 0.85rem;"
+              onclick="openImageUpload('pack-image-url')">画像をアップロード</button>
+          </div>
         </div>
         <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="pack-is-active" checked style="width: auto;">
@@ -244,7 +248,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">画像URL</label>
-          <input type="text" id="card-image-url" class="form-input" placeholder="https://...">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="card-image-url" class="form-input" placeholder="https://...">
+            <button type="button" class="btn btn-outline" style="white-space:nowrap; padding: 8px 12px; font-size: 0.85rem;"
+              onclick="openImageUpload('card-image-url')">画像をアップロード</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">説明</label>
@@ -280,6 +288,42 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ===== 画像アップロード隠し input ===== -->
+  <input type="file" id="image-upload-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+
+  <!-- ===== 画像アップロード中オーバーレイ ===== -->
+  <div id="upload-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  ">
+    <div class="spinner"></div>
+    <p style="color: #fff; font-size: 1rem;">アップロード中...</p>
+  </div>
+
+  <!-- ===== ドラッグ&ドロップ領域オーバーレイ ===== -->
+  <div id="drop-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background: rgba(249,217,35,0.08);
+    border: 3px dashed #f9d923;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  ">
+    <p style="color: #f9d923; font-size: 1.5rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.8);">
+      ここにドロップして画像をアップロード
+    </p>
   </div>
 
   <script src="/frontend/js/app.js"></script>

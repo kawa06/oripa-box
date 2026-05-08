@@ -100,6 +100,11 @@ frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "fronte
 if os.path.exists(frontend_path):
     app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
+# 画像アップロードファイルを配信（/static/uploads/）
+uploads_path = os.path.join(os.path.dirname(__file__), "static", "uploads")
+os.makedirs(uploads_path, exist_ok=True)
+app.mount("/static/uploads", StaticFiles(directory=uploads_path), name="uploads")
+
 
 @app.get("/")
 def root():

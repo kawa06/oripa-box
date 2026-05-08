@@ -477,10 +477,12 @@ function addCardRowToPrize(prizeKey, packId) {
       style="flex:2; min-width:100px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
       class="new-card-name">
     <input type="text" placeholder="画像URL (任意)"
-      style="flex:3; min-width:140px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
-      class="new-card-image-url">
+      style="flex:3; min-width:100px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+      class="new-card-image-url" id="inline-img-${rowId}">
+    <button type="button" class="btn btn-outline" style="padding:3px 7px; font-size:0.75rem; white-space:nowrap;"
+      onclick="_uploadTargetInputId='inline-img-${rowId}'; document.getElementById('image-upload-input')?.click()">UP</button>
     <input type="number" min="1" placeholder="コイン数(任意)"
-      style="width:110px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+      style="width:100px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
       class="new-card-coin-value">
     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;"
       onclick="saveNewCardRow('${rowId}', '${prizeKey}', ${packId})">保存</button>
@@ -853,7 +855,7 @@ async function loadShippingRequests() {
 }
 
 /**
- * 発送申請のステータスを更新する
+ * updateShippingStatus - 発送申請のステータスを更新する
  * @param {number} requestId
  * @param {string} newStatus
  */
@@ -872,3 +874,127 @@ async function updateShippingStatus(requestId, newStatus) {
     showAlert('admin-alert', err.message, 'error');
   }
 }
+
+
+// ===== 画像アップロード =====
+
+/** どの input に結果を反映するかを保持する */
+let _uploadTargetInputId = null;
+
+/**
+ * 画像アップロード: ファイル選択ダイアログを開く
+ * @param {string} targetInputId - アップロード後にURLをセットする input の id
+ */
+function openImageUpload(targetInputId) {
+  _uploadTargetInputId = targetInputId;
+  const fileInput = document.getElementById('image-upload-input');
+  if (!fileInput) return;
+  fileInput.value = '';  // 同じファイルを連続選択できるようリセット
+  fileInput.click();
+}
+
+/**
+ * ファイルをアップロードしてURLを指定の input にセットする
+ * @param {File} file
+ */
+async function _uploadImageFile(file) {
+  const overlay = document.getElementById('upload-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/admin/upload', {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'アップロードに失敗しました' }));
+      throw new Error(err.detail || 'アップロードに失敗しました');
+    }
+
+    const data = await res.json();
+    // 対象の input にURLをセット
+    if (_uploadTargetInputId) {
+      const input = document.getElementById(_uploadTargetInputId);
+      if (input) input.value = data.url;
+    }
+    showAlert('admin-alert', '画像をアップロードしました', 'success');
+  } catch (err) {
+    showAlert('admin-alert', `アップロードエラー: ${err.message}`, 'error');
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+  }
+}
+
+// ファイル選択ダイアログからのアップロード
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('image-upload-input');
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) _uploadImageFile(file);
+    });
+  }
+
+  // ===== ドラッグ&ドロップ対応 =====
+  const dropOverlay = document.getElementById('drop-overlay');
+  let dragCounter = 0;  // dragenter/dragleave の多重発火対策
+
+  document.addEventListener('dragenter', (e) => {
+    // ファイルのドラッグのみ反応
+    if (!e.dataTransfer?.types?.includes('Files')) return;
+    dragCounter++;
+    if (dropOverlay) dropOverlay.style.display = 'flex';
+    e.preventDefault();
+  });
+
+  document.addEventListener('dragleave', (e) => {
+    if (!e.dataTransfer?.types?.includes('Files')) return;
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      if (dropOverlay) dropOverlay.style.display = 'none';
+    }
+  });
+
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault();  // drop を許可するために必要
+  });
+
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    if (dropOverlay) dropOverlay.style.display = 'none';
+
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+
+    // 画像以外のファイルは無視
+    if (!file.type.startsWith('image/')) {
+      showAlert('admin-alert', '画像ファイル（jpg/png/gif/webp）をドロップしてください', 'error');
+      return;
+    }
+
+    // ドロップ時はアクティブなモーダルに応じて対象inputを推定する
+    if (!_uploadTargetInputId) {
+      // パックモーダルが開いていればパック、カードモーダルならカードを対象にする
+      const packModal = document.getElementById('pack-modal');
+      const cardModal = document.getElementById('card-modal');
+      if (packModal && !packModal.classList.contains('hidden')) {
+        _uploadTargetInputId = 'pack-image-url';
+      } else if (cardModal && !cardModal.classList.contains('hidden')) {
+        _uploadTargetInputId = 'card-image-url';
+      } else {
+        showAlert('admin-alert', '先にパックまたはカードのモーダルを開いてからドロップしてください', 'error');
+        return;
+      }
+    }
+
+    _uploadImageFile(file);
+  });
+});

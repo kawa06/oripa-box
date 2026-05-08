@@ -5,6 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>オリパガチャ - カード管理</title>
   <link rel="stylesheet" href="/frontend/css/style.css">
+  <style>
+    /* ===== チェックボックスのカスタムスタイル ===== */
+    .card-checkbox-wrap {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 10;
+    }
+    .card-checkbox {
+      /* ブラウザデフォルトのチェックボックスを非表示 */
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      display: block;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .card-checkbox:checked {
+      border-color: #f9d923;
+      background: rgba(249, 217, 35, 0.25);
+    }
+    /* チェックマーク */
+    .card-checkbox:checked::after {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #f9d923;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+      position: absolute;
+      top: 2px;
+      left: 5px;
+    }
+
+    /* ===== 選択状態のカードスタイル ===== */
+    .collection-card {
+      position: relative;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .collection-card.card-selected {
+      border-color: #f9d923 !important;
+      background: rgba(249, 217, 35, 0.08) !important;
+      box-shadow: 0 0 0 2px rgba(249, 217, 35, 0.4), 0 4px 16px rgba(249, 217, 35, 0.15) !important;
+    }
+
+    /* ===== 一括操作バー ===== */
+    .bulk-action-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--card-bg, #1e1b2e);
+      border: 1px solid var(--border-color, #3a3a5c);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .bulk-action-bar .bulk-count {
+      font-size: 0.9rem;
+      color: var(--text-secondary, #a0aec0);
+      margin-right: auto;
+    }
+    .bulk-action-bar .bulk-count span {
+      color: #f9d923;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
   <!-- ナビゲーションバー -->
@@ -53,6 +127,17 @@
       <button class="filter-btn" onclick="filterCollection('E賞')" data-rarity="E賞">E賞</button>
     </div>
 
+    <!-- 一括操作バー -->
+    <div class="bulk-action-bar fade-in">
+      <p class="bulk-count"><span id="selected-count">0</span> 枚選択中</p>
+      <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem;" onclick="selectAllCards()">全選択</button>
+      <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem;" onclick="deselectAllCards()">全解除</button>
+      <button class="btn btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="bulkConvertSelected()">選択をコイン変換</button>
+      <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem;" onclick="bulkShipSelected()">選択を発送申請</button>
+      <button class="btn btn-primary" style="padding: 6px 14px; font-size: 0.85rem; background: rgba(249,217,35,0.15); color: #f9d923; border-color: #f9d923;" onclick="bulkConvertAll()">全てコイン変換</button>
+      <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem; color: #34d399; border-color: #34d399;" onclick="bulkShipAll()">全て発送申請</button>
+    </div>
+
     <!-- カードグリッド -->
     <div id="collection-grid" class="collection-grid">
       <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;">
@@ -61,7 +146,7 @@
     </div>
   </div>
 
-  <!-- ===== コイン変換確認モーダル ===== -->
+  <!-- ===== コイン変換確認モーダル（単体） ===== -->
   <div id="convert-modal" style="
     display: none;
     position: fixed;
@@ -90,7 +175,36 @@
     </div>
   </div>
 
-  <!-- ===== 発送申請モーダル ===== -->
+  <!-- ===== 一括コイン変換確認モーダル ===== -->
+  <div id="bulk-convert-modal" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(0,0,0,0.75);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  ">
+    <div style="
+      background: var(--card-bg, #1e1b2e);
+      border: 1px solid rgba(249,217,35,0.4);
+      border-radius: 12px;
+      padding: 32px 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    ">
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 12px; color: #f9d923;">一括コイン変換</h2>
+      <p id="bulk-convert-modal-text" style="color: var(--text-secondary, #a0aec0); font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;"></p>
+      <div style="display: flex; gap: 12px;">
+        <button onclick="submitBulkConvert()" class="btn btn-primary" style="flex: 1; padding: 12px;">変換する</button>
+        <button onclick="closeBulkConvertModal()" class="btn btn-outline" style="flex: 1; padding: 12px;">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 発送申請モーダル（単体・一括共用） ===== -->
   <div id="ship-modal" style="
     display: none;
     position: fixed;

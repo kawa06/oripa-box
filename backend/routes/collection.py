@@ -231,6 +231,138 @@ def save_shipping_address(
         }
 
 
+@router.post("/convert-bulk")
+def convert_bulk_to_coins(
+    request: schemas.BulkConvertRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    複数カードをまとめてコインに変換する
+    変換不可なカード（発送申請中など）はスキップし、変換できたカードのみ処理する
+    """
+    if not request.card_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="カードIDが指定されていません")
+
+    total_coins = 0
+    converted = []
+    skipped = []
+
+    for card_id in request.card_ids:
+        user_card = db.query(models.UserCard).filter(
+            models.UserCard.id == card_id,
+            models.UserCard.user_id == current_user.id
+        ).first()
+
+        # 存在しない・所持していないカードはスキップ
+        if not user_card:
+            skipped.append(card_id)
+            continue
+
+        # 発送申請中・発送済みはスキップ
+        if user_card.status != "owned":
+            skipped.append(card_id)
+            continue
+
+        # コイン変換レートを取得
+        rarity = user_card.card.rarity
+        coins = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
+
+        # コインを付与
+        current_user.coin_balance += coins
+        total_coins += coins
+
+        # CoinTransaction に記録
+        db.add(models.CoinTransaction(
+            user_id=current_user.id,
+            amount=coins,
+            transaction_type="card_convert",
+            description=f"{user_card.card.name}（{rarity}）をコインに変換"
+        ))
+
+        # 枚数を減らす（1枚なら削除、複数なら-1）
+        converted.append(user_card.card.name)
+        if user_card.count <= 1:
+            db.delete(user_card)
+        else:
+            user_card.count -= 1
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "message": f"{len(converted)}枚のカードを {total_coins} コインに変換しました",
+        "converted_count": len(converted),
+        "skipped_count": len(skipped),
+        "coins_received": total_coins,
+        "new_balance": current_user.coin_balance
+    }
+
+
+@router.post("/ship-bulk")
+def request_shipping_bulk(
+    request: schemas.BulkShipRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    複数カードをまとめて発送申請する
+    申請不可なカード（発送申請済みなど）はスキップする
+    """
+    if not request.card_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="カードIDが指定されていません")
+
+    # 住所の存在チェック
+    address = db.query(models.ShippingAddress).filter(
+        models.ShippingAddress.id == request.address_id,
+        models.ShippingAddress.user_id == current_user.id
+    ).first()
+
+    if not address:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="住所が見つかりません")
+
+    requested = []
+    skipped = []
+
+    for card_id in request.card_ids:
+        user_card = db.query(models.UserCard).filter(
+            models.UserCard.id == card_id,
+            models.UserCard.user_id == current_user.id
+        ).first()
+
+        # 存在しない・所持していないカードはスキップ
+        if not user_card:
+            skipped.append(card_id)
+            continue
+
+        # 既に申請済みはスキップ
+        if user_card.status != "owned":
+            skipped.append(card_id)
+            continue
+
+        # 発送申請を作成
+        shipping_req = models.ShippingRequest(
+            user_id=current_user.id,
+            user_card_id=card_id,
+            address_id=request.address_id,
+            status="pending"
+        )
+        db.add(shipping_req)
+
+        # カードのステータスを「発送申請中」に変更
+        user_card.status = "shipping_requested"
+        requested.append(user_card.card.name)
+
+    db.commit()
+
+    return {
+        "message": f"{len(requested)}枚のカードの発送申請を受け付けました",
+        "requested_count": len(requested),
+        "skipped_count": len(skipped),
+        "status": "pending"
+    }
+
+
 @router.post("/ship")
 def request_shipping(
     request: schemas.ShippingRequestCreate,

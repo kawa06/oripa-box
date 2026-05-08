@@ -4,7 +4,10 @@
 is_admin フラグで管理者かどうかを判定する
 """
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend import models, schemas
@@ -230,3 +233,61 @@ def delete_card(
     db.delete(card)
     db.commit()
     return {"message": f"カード '{card.name}' を削除しました"}
+
+
+# ===== 画像アップロード =====
+
+# 対応する画像拡張子
+_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+# ファイルサイズ上限: 5MB
+_MAX_FILE_SIZE = 5 * 1024 * 1024
+# アップロード先ディレクトリ（プロジェクトルート基準）
+_UPLOAD_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "backend", "static", "uploads"
+)
+
+
+@router.post("/upload")
+async def upload_image(
+    file: UploadFile = File(...),
+    admin: models.User = Depends(require_admin)
+):
+    """
+    画像ファイルをアップロードしてサーバーに保存する
+    対応形式: jpg, jpeg, png, gif, webp
+    最大サイズ: 5MB
+    保存先: backend/static/uploads/
+    レスポンス: {"url": "/static/uploads/filename.ext"}
+    """
+    # 拡張子チェック
+    filename = file.filename or ""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in _ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"対応していないファイル形式です。対応形式: {', '.join(_ALLOWED_EXTENSIONS)}"
+        )
+
+    # ファイル内容を読み込み
+    content = await file.read()
+
+    # サイズチェック
+    if len(content) > _MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ファイルサイズが5MBを超えています"
+        )
+
+    # アップロードディレクトリを作成（存在しなければ）
+    os.makedirs(_UPLOAD_DIR, exist_ok=True)
+
+    # ユニークなファイル名を生成してサーバーに保存
+    unique_name = f"{uuid.uuid4().hex}.{ext}"
+    save_path = os.path.join(_UPLOAD_DIR, unique_name)
+
+    with open(save_path, "wb") as f:
+        f.write(content)
+
+    # アクセスURLを返す
+    return {"url": f"/static/uploads/{unique_name}"}

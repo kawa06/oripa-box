@@ -1,12 +1,18 @@
 /**
  * collection.js - カード管理画面スクリプト
- * 所持カード一覧の表示・コイン変換・発送申請を担当する
+ * 所持カード一覧の表示・コイン変換・発送申請・一括操作を担当する
  */
 
 let currentRarity = '';
 // 変換・申請対象カードのID（モーダルで使用）
 let pendingConvertCardId = null;
 let pendingShipCardId = null;
+// 一括操作モード: 'convert' または 'ship'
+let bulkShipMode = false;
+// 選択中のカードIDセット
+const selectedCardIds = new Set();
+// 現在表示中のカード一覧（全件）
+let currentCards = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   requireAuth();
@@ -52,14 +58,18 @@ async function loadStats() {
 // ===== コレクション読み込み =====
 async function loadCollection(rarity) {
   currentRarity = rarity;
+  // 選択状態をリセット
+  selectedCardIds.clear();
+  updateSelectedCount();
+
   const grid = document.getElementById('collection-grid');
   grid.innerHTML = '<div class="flex-center" style="grid-column: 1 / -1; padding: 60px;"><div class="spinner"></div></div>';
 
   try {
     const url = rarity ? `/collection?rarity=${encodeURIComponent(rarity)}` : '/collection';
-    const cards = await apiGet(url);
+    currentCards = await apiGet(url);
 
-    if (!cards.length) {
+    if (!currentCards.length) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--text-secondary);">
           <p style="font-size: 3rem; margin-bottom: 16px;">📭</p>
@@ -70,7 +80,7 @@ async function loadCollection(rarity) {
       return;
     }
 
-    grid.innerHTML = cards.map(card => buildCollectionCard(card)).join('');
+    grid.innerHTML = currentCards.map(card => buildCollectionCard(card)).join('');
   } catch (err) {
     grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--error); padding: 40px;">${err.message}</div>`;
   }
@@ -89,6 +99,14 @@ function buildCollectionCard(card) {
 
   // ステータス表示
   const statusInfo = getStatusInfo(card.status);
+
+  // チェックボックス（owned カードのみ選択可能）
+  const checkboxHtml = card.status === 'owned'
+    ? `<div class="card-checkbox-wrap">
+        <input type="checkbox" class="card-checkbox" id="chk-${card.id}"
+          onchange="toggleCardSelection(${card.id}, this.checked)">
+      </div>`
+    : '';
 
   // ステータスによってボタンを変更する
   let actionButtons = '';
@@ -125,7 +143,8 @@ function buildCollectionCard(card) {
   }
 
   return `
-    <div class="collection-card rarity-${card.card_rarity}">
+    <div class="collection-card rarity-${card.card_rarity}" id="card-wrap-${card.id}">
+      ${checkboxHtml}
       <div class="collection-card-art">
         ${imgTag}
         ${card.count > 1 ? `<span class="card-count-badge">×${card.count}</span>` : ''}
@@ -162,7 +181,49 @@ function filterCollection(rarity) {
   loadCollection(rarity);
 }
 
-// ===== コイン変換モーダル =====
+// ===== チェックボックス・選択管理 =====
+
+/** カードの選択状態を切り替える */
+function toggleCardSelection(cardId, checked) {
+  if (checked) {
+    selectedCardIds.add(cardId);
+  } else {
+    selectedCardIds.delete(cardId);
+  }
+  // カード外枠のスタイルを更新
+  const wrap = document.getElementById(`card-wrap-${cardId}`);
+  if (wrap) wrap.classList.toggle('card-selected', checked);
+  updateSelectedCount();
+}
+
+/** 表示中の owned カードを全選択する */
+function selectAllCards() {
+  currentCards.forEach(card => {
+    if (card.status !== 'owned') return;
+    selectedCardIds.add(card.id);
+    const chk = document.getElementById(`chk-${card.id}`);
+    if (chk) chk.checked = true;
+    const wrap = document.getElementById(`card-wrap-${card.id}`);
+    if (wrap) wrap.classList.add('card-selected');
+  });
+  updateSelectedCount();
+}
+
+/** 全解除 */
+function deselectAllCards() {
+  selectedCardIds.clear();
+  document.querySelectorAll('.card-checkbox').forEach(chk => { chk.checked = false; });
+  document.querySelectorAll('.collection-card').forEach(wrap => wrap.classList.remove('card-selected'));
+  updateSelectedCount();
+}
+
+/** 選択枚数表示を更新する */
+function updateSelectedCount() {
+  const el = document.getElementById('selected-count');
+  if (el) el.textContent = selectedCardIds.size;
+}
+
+// ===== コイン変換モーダル（単体） =====
 function openConvertModal(cardId, cardName, rarity, coinValue) {
   pendingConvertCardId = cardId;
   document.getElementById('convert-modal-text').textContent =
@@ -199,11 +260,101 @@ async function submitConvert() {
   }
 }
 
-// ===== 発送申請モーダル =====
+// ===== 一括コイン変換 =====
+
+/** 選択中のカードを一括変換 */
+function bulkConvertSelected() {
+  if (selectedCardIds.size === 0) {
+    alert('変換するカードを選択してください');
+    return;
+  }
+  openBulkConvertModal(Array.from(selectedCardIds));
+}
+
+/** 全 owned カードを一括変換 */
+function bulkConvertAll() {
+  const ids = currentCards.filter(c => c.status === 'owned').map(c => c.id);
+  if (ids.length === 0) {
+    alert('変換できるカードがありません');
+    return;
+  }
+  openBulkConvertModal(ids);
+}
+
+let pendingBulkConvertIds = [];
+
+function openBulkConvertModal(ids) {
+  pendingBulkConvertIds = ids;
+  document.getElementById('bulk-convert-modal-text').textContent =
+    `${ids.length}枚のカードをまとめてコインに変換しますか？この操作は取り消せません。`;
+  document.getElementById('bulk-convert-modal').style.display = 'flex';
+}
+
+function closeBulkConvertModal() {
+  pendingBulkConvertIds = [];
+  document.getElementById('bulk-convert-modal').style.display = 'none';
+}
+
+async function submitBulkConvert() {
+  if (!pendingBulkConvertIds.length) return;
+  const ids = pendingBulkConvertIds;
+  closeBulkConvertModal();
+
+  try {
+    const res = await apiPost('/collection/convert-bulk', { card_ids: ids });
+    // コイン残高を更新
+    const user = getUser();
+    if (user) {
+      user.coin_balance = res.new_balance;
+      saveUser(user);
+      const balanceEl = document.getElementById('coin-balance-display');
+      if (balanceEl) balanceEl.textContent = res.new_balance;
+    }
+    alert(res.message);
+    await loadStats();
+    await loadCollection(currentRarity);
+  } catch (err) {
+    alert(`一括変換に失敗しました: ${err.message}`);
+  }
+}
+
+// ===== 発送申請モーダル（単体・一括共用） =====
+
+/** 単体の発送申請を開く */
 async function openShipModal(cardId, cardName, rarity) {
+  bulkShipMode = false;
   pendingShipCardId = cardId;
   document.getElementById('ship-modal-card-name').textContent = `対象カード: ${cardName}（${rarity}）`;
-  // アラートをリセット
+  await _prepareShipModal();
+}
+
+/** 選択したカードを一括発送申請 */
+async function bulkShipSelected() {
+  if (selectedCardIds.size === 0) {
+    alert('発送申請するカードを選択してください');
+    return;
+  }
+  bulkShipMode = true;
+  pendingShipCardId = Array.from(selectedCardIds);
+  document.getElementById('ship-modal-card-name').textContent = `${pendingShipCardId.length}枚のカードを発送申請します`;
+  await _prepareShipModal();
+}
+
+/** 全 owned カードを一括発送申請 */
+async function bulkShipAll() {
+  const ids = currentCards.filter(c => c.status === 'owned').map(c => c.id);
+  if (ids.length === 0) {
+    alert('発送申請できるカードがありません');
+    return;
+  }
+  bulkShipMode = true;
+  pendingShipCardId = ids;
+  document.getElementById('ship-modal-card-name').textContent = `${ids.length}枚のカードを一括発送申請します`;
+  await _prepareShipModal();
+}
+
+/** 発送モーダルの住所フォームを準備する共通処理 */
+async function _prepareShipModal() {
   const alertEl = document.getElementById('ship-modal-alert');
   if (alertEl) alertEl.className = 'alert';
 
@@ -228,6 +379,7 @@ async function openShipModal(cardId, cardName, rarity) {
 
 function closeShipModal() {
   pendingShipCardId = null;
+  bulkShipMode = false;
   document.getElementById('ship-modal').style.display = 'none';
 }
 
@@ -255,14 +407,25 @@ async function submitShipRequest() {
       address: addr, building: building || null, phone
     });
 
-    // 発送申請を送信
-    const res = await apiPost('/collection/ship', {
-      user_card_id: pendingShipCardId,
-      address_id: savedAddr.id
-    });
+    if (bulkShipMode) {
+      // 一括発送申請
+      const ids = Array.isArray(pendingShipCardId) ? pendingShipCardId : [pendingShipCardId];
+      const res = await apiPost('/collection/ship-bulk', {
+        card_ids: ids,
+        address_id: savedAddr.id
+      });
+      closeShipModal();
+      alert(res.message);
+    } else {
+      // 単体発送申請
+      const res = await apiPost('/collection/ship', {
+        user_card_id: pendingShipCardId,
+        address_id: savedAddr.id
+      });
+      closeShipModal();
+      alert(res.message);
+    }
 
-    closeShipModal();
-    alert(res.message);
     // カード一覧を再読み込み
     await loadStats();
     await loadCollection(currentRarity);
