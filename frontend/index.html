@@ -163,6 +163,7 @@
 
     /**
      * 賞別カードプレビューHTMLを生成する
+     * 各賞の全カードを横スクロールで表示する
      * @param {Array} cards - パックのカードリスト
      * @param {Object} prizeColors - 賞ごとのカラーマップ
      * @param {Array} prizeOrder - 賞の表示順
@@ -170,34 +171,46 @@
     function buildPrizePreview(cards, prizeColors, prizeOrder) {
       if (!cards || cards.length === 0) return '';
 
-      // 各賞の代表カード（最初の1枚）を取得
+      // 各賞のカードを全件グループ化（複数対応）
       const prizeMap = {};
+      prizeOrder.forEach(p => { prizeMap[p] = []; });
       for (const card of cards) {
-        if (!prizeMap[card.rarity]) {
-          prizeMap[card.rarity] = card;
-        }
+        if (prizeMap[card.rarity]) prizeMap[card.rarity].push(card);
       }
 
-      const items = prizeOrder.map(prize => {
-        const card = prizeMap[prize];
+      // 賞ごとのセクションを生成（カードがある賞のみ表示）
+      const sections = prizeOrder.map(prize => {
+        const prizeCards = prizeMap[prize];
         const color = prizeColors[prize] || '#666';
-        const imgHTML = card && card.image_url
-          ? `<img src="${card.image_url}" alt="${prize}" class="prize-preview-img"
-                  style="border-color: ${color};">`
+
+        // 各カードのサムネイルHTML
+        const cardImgs = prizeCards.map(card => {
+          return card.image_url
+            ? `<img src="${card.image_url}" alt="${card.name}" class="prize-preview-img"
+                    title="${card.name}" style="border-color: ${color};">`
+            : `<div class="prize-preview-placeholder"
+                    title="${card.name}" style="background: ${color}11; border-color: ${color}88;">
+                 <span style="font-size: 0.75rem;">${prize[0]}</span>
+               </div>`;
+        }).join('');
+
+        // カードが1枚もない賞はプレースホルダーを1つ表示
+        const displayHtml = prizeCards.length > 0
+          ? cardImgs
           : `<div class="prize-preview-placeholder"
-                  style="background: ${color}11; border-color: ${color}88;">
-               <span style="font-size: 0.9rem;">${prize[0]}</span>
+                  style="background: ${color}11; border-color: ${color}44; opacity:0.4;">
+               <span style="font-size: 0.75rem;">${prize[0]}</span>
              </div>`;
 
         return `
-          <div class="prize-preview-item">
-            ${imgHTML}
+          <div class="prize-preview-section">
             <span class="prize-preview-label" style="color: ${color};">${prize}</span>
+            <div class="prize-preview-imgs">${displayHtml}</div>
           </div>
         `;
       }).join('');
 
-      return `<div class="pack-prize-preview">${items}</div>`;
+      return `<div class="pack-prize-preview">${sections}</div>`;
     }
   </script>
 </body>

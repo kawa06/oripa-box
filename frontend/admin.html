@@ -105,7 +105,7 @@
 
     <!-- パック編集モーダル -->
     <div id="pack-modal" class="admin-modal hidden">
-      <div class="admin-modal-inner" style="max-width: 500px;">
+      <div class="admin-modal-inner" style="max-width: 600px;">
         <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;" id="pack-modal-title">パック追加</h3>
         <input type="hidden" id="pack-edit-id">
         <div class="form-group">
@@ -177,7 +177,21 @@
             空欄の場合: A賞1% / B賞4% / C賞15% / D賞30% / E賞50%（デフォルト）
           </p>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 8px;">
+
+        <!-- 賞別カード一括追加セクション（パック編集時のみ表示） -->
+        <div id="pack-cards-section" class="hidden">
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;">カードを賞ごとに追加</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+              保存後に各賞のカードをまとめて登録できます。確率はパック保存後に個別編集可能。
+            </p>
+            <!-- A賞〜E賞 各セクション（JSで動的生成） -->
+            <div id="prize-cards-container"></div>
+            <div id="pack-cards-save-status" style="font-size: 0.85rem; margin-top: 8px;"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
           <button class="btn btn-primary" onclick="submitPackForm()" style="flex:1;">保存</button>
           <button class="btn btn-outline" onclick="closePackModal()" style="flex:1;">キャンセル</button>
         </div>

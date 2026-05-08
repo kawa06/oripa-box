@@ -127,6 +127,15 @@ async function submitGrantCoins() {
 // ===== パック管理 =====
 let packsCache = [];
 
+// 賞の定義（表示色・デフォルト確率）
+const PRIZE_DEFS = [
+  { key: 'A賞', color: 'var(--prize-a)', defaultProb: 0.01 },
+  { key: 'B賞', color: 'var(--prize-b)', defaultProb: 0.04 },
+  { key: 'C賞', color: 'var(--prize-c)', defaultProb: 0.15 },
+  { key: 'D賞', color: 'var(--prize-d)', defaultProb: 0.30 },
+  { key: 'E賞', color: 'var(--prize-e)', defaultProb: 0.50 },
+];
+
 async function loadAdminPacks() {
   const wrap = document.getElementById('packs-table-wrap');
   wrap.innerHTML = '<div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>';
@@ -178,6 +187,11 @@ function openPackModal(packId = null) {
   });
   updateProbTotal();
 
+  // 賞別カードセクションをリセット
+  const cardsSection = document.getElementById('pack-cards-section');
+  document.getElementById('prize-cards-container').innerHTML = '';
+  document.getElementById('pack-cards-save-status').textContent = '';
+
   if (packId) {
     const pack = packsCache.find(p => p.id === packId);
     if (!pack) return;
@@ -203,6 +217,10 @@ function openPackModal(packId = null) {
         updateProbTotal();
       } catch {}
     }
+
+    // 編集時: 賞別カードセクションを表示し、既存カードを読み込む
+    cardsSection.classList.remove('hidden');
+    loadPackCardsIntoModal(packId);
   } else {
     title.textContent = 'パック追加';
     document.getElementById('pack-name').value = '';
@@ -212,6 +230,9 @@ function openPackModal(packId = null) {
     document.getElementById('pack-max-stock').value = '100';
     document.getElementById('pack-image-url').value = '';
     document.getElementById('pack-is-active').checked = true;
+
+    // 新規作成時: カードセクションは非表示
+    cardsSection.classList.add('hidden');
   }
   modal.classList.remove('hidden');
 }
@@ -302,6 +323,249 @@ async function deletePack(packId, packName) {
     loadAdminPacks();
   } catch (err) {
     showAlert('admin-alert', err.message, 'error');
+  }
+}
+
+// ===== パックモーダル内 賞別カード管理 =====
+
+/**
+ * 指定パックのカードを取得し、賞別セクションをモーダル内に描画する
+ * @param {number} packId
+ */
+async function loadPackCardsIntoModal(packId) {
+  const container = document.getElementById('prize-cards-container');
+  container.innerHTML = '<div class="flex-center" style="padding:16px;"><div class="spinner"></div></div>';
+
+  let existingCards = [];
+  try {
+    existingCards = await apiGet(`/admin/cards?pack_id=${packId}`);
+  } catch (e) {
+    container.innerHTML = `<p style="color:var(--error);">カードの読み込みに失敗しました</p>`;
+    return;
+  }
+
+  // 賞ごとにカードをグループ化
+  const cardsByPrize = {};
+  PRIZE_DEFS.forEach(p => { cardsByPrize[p.key] = []; });
+  existingCards.forEach(c => {
+    if (cardsByPrize[c.rarity]) cardsByPrize[c.rarity].push(c);
+  });
+
+  container.innerHTML = '';
+  PRIZE_DEFS.forEach(prize => {
+    const section = buildPrizeSectionEl(packId, prize, cardsByPrize[prize.key]);
+    container.appendChild(section);
+  });
+}
+
+/**
+ * 賞1セクションのDOM要素を生成する
+ * @param {number} packId
+ * @param {{key:string, color:string, defaultProb:number}} prize
+ * @param {Array} existingCards - その賞の既存カード配列
+ * @returns {HTMLElement}
+ */
+function buildPrizeSectionEl(packId, prize, existingCards) {
+  const prizeKey = prize.key;
+  const sectionId = `prize-section-${prizeKey}`;
+
+  const wrap = document.createElement('div');
+  wrap.id = sectionId;
+  wrap.style.cssText = 'margin-bottom:16px; border:1px solid var(--border-color); border-radius:8px; overflow:hidden;';
+
+  // セクションヘッダー
+  const header = document.createElement('div');
+  header.style.cssText = `display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:${prize.color}22;`;
+  header.innerHTML = `
+    <span style="font-weight:700; color:${prize.color};">${prizeKey}</span>
+    <button class="btn btn-outline" style="padding:3px 10px; font-size:0.8rem;"
+      onclick="addCardRowToPrize('${prizeKey}', ${packId})">＋ カード追加</button>
+  `;
+  wrap.appendChild(header);
+
+  // カード行コンテナ
+  const rowsContainer = document.createElement('div');
+  rowsContainer.id = `prize-rows-${prizeKey}`;
+  rowsContainer.style.cssText = 'padding:8px 12px;';
+
+  // 既存カードを行として追加
+  existingCards.forEach(card => {
+    rowsContainer.appendChild(buildExistingCardRow(card, prizeKey));
+  });
+
+  // 既存カードがなければ案内メッセージ
+  if (existingCards.length === 0) {
+    const hint = document.createElement('p');
+    hint.className = 'prize-no-cards-hint';
+    hint.style.cssText = 'font-size:0.8rem; color:var(--text-secondary); margin:4px 0;';
+    hint.textContent = 'カードがありません。「＋ カード追加」で追加できます。';
+    rowsContainer.appendChild(hint);
+  }
+
+  wrap.appendChild(rowsContainer);
+  return wrap;
+}
+
+/**
+ * 既存カード行（表示+削除ボタン）を生成する
+ * @param {Object} card - カードオブジェクト
+ * @param {string} prizeKey
+ * @returns {HTMLElement}
+ */
+function buildExistingCardRow(card, prizeKey) {
+  const row = document.createElement('div');
+  row.id = `existing-card-row-${card.id}`;
+  row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid var(--border-color)11;';
+
+  // 画像サムネイル
+  const imgWrap = document.createElement('div');
+  imgWrap.style.cssText = 'width:36px; height:36px; flex-shrink:0; border-radius:4px; overflow:hidden; background:var(--bg-secondary);';
+  if (card.image_url) {
+    imgWrap.innerHTML = `<img src="${escapeHtml(card.image_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='?'">`;
+  } else {
+    imgWrap.textContent = '?';
+    imgWrap.style.cssText += 'display:flex;align-items:center;justify-content:center;font-size:1.2rem;';
+  }
+
+  const nameEl = document.createElement('span');
+  nameEl.style.cssText = 'flex:1; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+  nameEl.textContent = card.name;
+
+  const probEl = document.createElement('span');
+  probEl.style.cssText = 'font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;';
+  probEl.textContent = `${(card.probability * 100).toFixed(2)}%`;
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-danger';
+  delBtn.style.cssText = 'padding:2px 8px; font-size:0.75rem; white-space:nowrap;';
+  delBtn.textContent = '削除';
+  delBtn.onclick = () => deleteCardFromModal(card.id, card.name, prizeKey);
+
+  row.appendChild(imgWrap);
+  row.appendChild(nameEl);
+  row.appendChild(probEl);
+  row.appendChild(delBtn);
+  return row;
+}
+
+/**
+ * 賞セクションに新規カード入力行を追加する
+ * @param {string} prizeKey - 例: 'A賞'
+ * @param {number} packId
+ */
+function addCardRowToPrize(prizeKey, packId) {
+  const rowsContainer = document.getElementById(`prize-rows-${prizeKey}`);
+
+  // 案内メッセージを消す
+  const hint = rowsContainer.querySelector('.prize-no-cards-hint');
+  if (hint) hint.remove();
+
+  const rowId = `new-card-row-${prizeKey}-${Date.now()}`;
+  const row = document.createElement('div');
+  row.id = rowId;
+  row.style.cssText = 'display:flex; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid var(--border-color)22; flex-wrap:wrap;';
+
+  row.innerHTML = `
+    <input type="text" placeholder="カード名 *"
+      style="flex:2; min-width:100px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+      class="new-card-name">
+    <input type="text" placeholder="画像URL (任意)"
+      style="flex:3; min-width:140px; padding:5px 8px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-size:0.85rem;"
+      class="new-card-image-url">
+    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;"
+      onclick="saveNewCardRow('${rowId}', '${prizeKey}', ${packId})">保存</button>
+    <button class="btn btn-outline" style="padding:4px 10px; font-size:0.8rem;"
+      onclick="document.getElementById('${rowId}').remove()">✕</button>
+  `;
+  rowsContainer.appendChild(row);
+}
+
+/**
+ * 新規カード行の入力内容をAPIで保存する
+ * @param {string} rowId
+ * @param {string} prizeKey
+ * @param {number} packId
+ */
+async function saveNewCardRow(rowId, prizeKey, packId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  const nameInput = row.querySelector('.new-card-name');
+  const imageInput = row.querySelector('.new-card-image-url');
+  const name = nameInput.value.trim();
+  const imageUrl = imageInput.value.trim();
+
+  if (!name) {
+    nameInput.style.borderColor = 'var(--error)';
+    nameInput.focus();
+    return;
+  }
+  nameInput.style.borderColor = '';
+
+  // 賞に対応するデフォルト確率を使用
+  const prizeDef = PRIZE_DEFS.find(p => p.key === prizeKey);
+  const probability = prizeDef ? prizeDef.defaultProb : 0.1;
+
+  const statusEl = document.getElementById('pack-cards-save-status');
+  try {
+    const saved = await apiCall('/admin/cards', {
+      method: 'POST',
+      body: JSON.stringify({
+        pack_id: packId,
+        name,
+        rarity: prizeKey,
+        probability,
+        image_url: imageUrl || null,
+        description: null
+      })
+    });
+
+    // 保存成功: 入力行を既存カード行に置き換える
+    const existingRow = buildExistingCardRow(saved, prizeKey);
+    row.replaceWith(existingRow);
+    statusEl.style.color = 'var(--success, #22c55e)';
+    statusEl.textContent = `「${name}」を${prizeKey}に追加しました`;
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+
+    // カード管理タブのキャッシュも更新
+    loadAdminPacksForSelect();
+  } catch (err) {
+    statusEl.style.color = 'var(--error)';
+    statusEl.textContent = `エラー: ${err.message}`;
+  }
+}
+
+/**
+ * モーダル内のカード行から削除する
+ * @param {number} cardId
+ * @param {string} cardName
+ * @param {string} prizeKey
+ */
+async function deleteCardFromModal(cardId, cardName, prizeKey) {
+  if (!confirm(`カード「${cardName}」を削除しますか？`)) return;
+  const statusEl = document.getElementById('pack-cards-save-status');
+  try {
+    await apiCall(`/admin/cards/${cardId}`, { method: 'DELETE', body: '{}' });
+    const rowEl = document.getElementById(`existing-card-row-${cardId}`);
+    if (rowEl) {
+      rowEl.remove();
+      // 行が全部消えたら案内メッセージを表示
+      const rowsContainer = document.getElementById(`prize-rows-${prizeKey}`);
+      const remaining = rowsContainer.querySelectorAll('[id^="existing-card-row-"], [id^="new-card-row-"]');
+      if (remaining.length === 0) {
+        const hint = document.createElement('p');
+        hint.className = 'prize-no-cards-hint';
+        hint.style.cssText = 'font-size:0.8rem; color:var(--text-secondary); margin:4px 0;';
+        hint.textContent = 'カードがありません。「＋ カード追加」で追加できます。';
+        rowsContainer.appendChild(hint);
+      }
+    }
+    statusEl.style.color = 'var(--success, #22c55e)';
+    statusEl.textContent = `「${cardName}」を削除しました`;
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  } catch (err) {
+    statusEl.style.color = 'var(--error)';
+    statusEl.textContent = `削除エラー: ${err.message}`;
   }
 }
 
