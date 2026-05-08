@@ -48,6 +48,7 @@ function switchTab(tabName) {
   event.target.classList.add('active');
 
   if (tabName === 'cards') loadCards();
+  if (tabName === 'shipping') loadShippingRequests();
 }
 
 // ===== ユーザー管理 =====
@@ -747,4 +748,107 @@ function escapeHtml(str) {
 function formatDate(iso) {
   if (!iso) return '-';
   return new Date(iso).toLocaleDateString('ja-JP');
+}
+
+// ===== 発送管理 =====
+
+/**
+ * 発送申請一覧を読み込んでテーブルに表示する
+ */
+async function loadShippingRequests() {
+  const wrap = document.getElementById('shipping-table-wrap');
+  const statusFilter = document.getElementById('shipping-status-filter')?.value || '';
+  wrap.innerHTML = '<div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>';
+
+  try {
+    const url = statusFilter
+      ? `/admin/shipping?status_filter=${encodeURIComponent(statusFilter)}`
+      : '/admin/shipping';
+    const requests = await apiGet(url);
+
+    if (!requests.length) {
+      wrap.innerHTML = '<p class="text-secondary text-center" style="padding: 24px;">発送申請がありません</p>';
+      return;
+    }
+
+    const statusLabels = {
+      'pending': '<span style="color:#fbbf24; font-weight:700;">発送待ち</span>',
+      'shipped': '<span style="color:#34d399; font-weight:700;">発送済み</span>',
+      'completed': '<span style="color:#a0aec0; font-weight:700;">完了</span>',
+    };
+
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead><tr>
+          <th>ID</th>
+          <th>ユーザー</th>
+          <th>カード</th>
+          <th>住所</th>
+          <th>電話番号</th>
+          <th>申請日</th>
+          <th>ステータス</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody>
+          ${requests.map(r => `
+            <tr>
+              <td>${r.id}</td>
+              <td>
+                <div style="font-weight:600;">${escapeHtml(r.username)}</div>
+                <div style="font-size:0.78rem; color:var(--text-secondary);">${escapeHtml(r.user_email)}</div>
+              </td>
+              <td>
+                <div style="font-weight:600;">${escapeHtml(r.card_name)}</div>
+                <div style="font-size:0.78rem; color:var(--text-secondary);">${r.card_rarity} / ${escapeHtml(r.pack_name)}</div>
+              </td>
+              <td style="font-size:0.82rem; line-height:1.5;">
+                <div>${escapeHtml(r.address_name)}</div>
+                <div>〒${escapeHtml(r.postal_code)} ${escapeHtml(r.prefecture)}</div>
+                <div>${escapeHtml(r.city)}${escapeHtml(r.address)}${r.building ? ' ' + escapeHtml(r.building) : ''}</div>
+              </td>
+              <td style="font-size:0.82rem;">${escapeHtml(r.phone)}</td>
+              <td style="font-size:0.82rem;">${formatDate(r.created_at)}</td>
+              <td>${statusLabels[r.status] || escapeHtml(r.status)}</td>
+              <td>
+                <div style="display:flex; flex-direction:column; gap:4px; min-width:90px;">
+                  ${r.status === 'pending' ? `
+                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;"
+                      onclick="updateShippingStatus(${r.id}, 'shipped')">発送済みにする</button>
+                  ` : ''}
+                  ${r.status === 'shipped' ? `
+                    <button class="btn btn-outline" style="padding:4px 10px; font-size:0.8rem;"
+                      onclick="updateShippingStatus(${r.id}, 'completed')">完了にする</button>
+                  ` : ''}
+                  ${r.status === 'completed' ? `<span style="font-size:0.8rem; color:var(--text-secondary);">対応済み</span>` : ''}
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    wrap.innerHTML = `<p style="color: var(--error); padding: 24px;">${err.message}</p>`;
+  }
+}
+
+/**
+ * 発送申請のステータスを更新する
+ * @param {number} requestId
+ * @param {string} newStatus
+ */
+async function updateShippingStatus(requestId, newStatus) {
+  const statusLabels = { pending: '発送待ち', shipped: '発送済み', completed: '完了' };
+  if (!confirm(`発送申請 #${requestId} を「${statusLabels[newStatus]}」に更新しますか？`)) return;
+
+  try {
+    const res = await apiCall(`/admin/shipping/${requestId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus })
+    });
+    showAlert('admin-alert', res.message, 'success');
+    loadShippingRequests();
+  } catch (err) {
+    showAlert('admin-alert', err.message, 'error');
+  }
 }

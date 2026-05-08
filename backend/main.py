@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 import os
 
 from backend.database import engine, Base, SessionLocal
-from backend.routes import auth, gacha, coins, packs, admin, collection, exchange, ranking
+from backend.routes import auth, gacha, coins, packs, admin, collection, exchange, ranking, shipping
 from backend import config, models
 
 # テーブルが存在しない場合は自動作成
@@ -27,6 +27,8 @@ _MISSING_COLUMNS = [
     ("packs", "probabilities","TEXT"),
     ("packs", "image_url",    "TEXT"),
     ("cards", "image_url",    "TEXT"),
+    # UserCard に status カラムを追加（owned/shipping_requested/shipped）
+    ("user_cards", "status",  "TEXT DEFAULT 'owned' NOT NULL"),
 ]
 
 _raw_conn = engine.raw_connection()
@@ -89,6 +91,7 @@ app.include_router(admin.router)
 app.include_router(collection.router)
 app.include_router(exchange.router)
 app.include_router(ranking.router)
+app.include_router(shipping.router)
 
 # フロントエンドの静的ファイルを配信
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")

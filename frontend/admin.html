@@ -18,9 +18,9 @@
     <ul class="navbar-nav">
       <li><a href="/frontend/index.html">パック一覧</a></li>
       <li><a href="/frontend/gacha.html">ガチャ</a></li>
-      <li><a href="/frontend/collection.html">コレクション</a></li>
+      <li><a href="/frontend/collection.html">カード管理</a></li>
       <li><a href="/frontend/history.html">履歴</a></li>
-      <li><a href="/frontend/exchange.html">交換所</a></li>
+      <li style="display:none;"><a href="/frontend/exchange.html">交換所</a></li>
       <li><a href="/frontend/ranking.html">ランキング</a></li>
       <li><a href="/frontend/coins.html">コイン購入</a></li>
       <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html" class="active">管理</a></li>
@@ -65,6 +65,7 @@
       <button class="tab-btn active" onclick="switchTab('users')">ユーザー管理</button>
       <button class="tab-btn" onclick="switchTab('packs')">パック管理</button>
       <button class="tab-btn" onclick="switchTab('cards')">カード管理</button>
+      <button class="tab-btn" onclick="switchTab('shipping')">発送管理</button>
     </div>
 
     <!-- ===== ユーザー管理タブ ===== -->
@@ -253,6 +254,25 @@
           <button class="btn btn-primary" onclick="submitCardForm()" style="flex:1;">保存</button>
           <button class="btn btn-outline" onclick="closeCardModal()" style="flex:1;">キャンセル</button>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== 発送管理タブ ===== -->
+    <div id="tab-shipping" class="tab-content hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700;">発送申請一覧</h2>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <select id="shipping-status-filter" class="form-input" style="width: auto; padding: 8px 12px;" onchange="loadShippingRequests()">
+            <option value="">すべて</option>
+            <option value="pending">発送待ち</option>
+            <option value="shipped">発送済み</option>
+            <option value="completed">完了</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadShippingRequests()" style="padding: 8px 16px; font-size: 0.9rem;">更新</button>
+        </div>
+      </div>
+      <div id="shipping-table-wrap" class="admin-table-wrap">
+        <div class="flex-center" style="padding: 40px;"><div class="spinner"></div></div>
       </div>
     </div>
 

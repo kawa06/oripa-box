@@ -268,3 +268,73 @@ class RankingEntry(BaseModel):
     rank: int
     username: str
     ur_count: int  # A賞獲得数（フィールド名は後方互換のためur_countのまま）
+
+
+# ===== 発送・住所関連スキーマ =====
+
+class ShippingAddressCreate(BaseModel):
+    """住所作成・更新リクエスト"""
+    name: str
+    postal_code: str
+    prefecture: str
+    city: str
+    address: str
+    building: Optional[str] = None
+    phone: str
+
+
+class ShippingAddressResponse(BaseModel):
+    """住所レスポンス"""
+    id: int
+    name: str
+    postal_code: str
+    prefecture: str
+    city: str
+    address: str
+    building: Optional[str] = None
+    phone: str
+
+    class Config:
+        from_attributes = True
+
+
+class ShippingRequestCreate(BaseModel):
+    """発送申請リクエスト"""
+    user_card_id: int    # 発送するカードのユーザーカードID
+    address_id: int      # 発送先住所ID
+
+
+class ShippingRequestResponse(BaseModel):
+    """発送申請レスポンス（管理者向け詳細）"""
+    id: int
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    # ユーザー情報
+    username: str
+    user_email: str
+    # カード情報
+    card_name: str
+    card_rarity: str
+    pack_name: str
+    # 住所情報
+    address_name: str
+    postal_code: str
+    prefecture: str
+    city: str
+    address: str
+    building: Optional[str] = None
+    phone: str
+
+    class Config:
+        from_attributes = True
+
+
+class ConvertToCoinsRequest(BaseModel):
+    """カードをコインに変換するリクエスト"""
+    user_card_id: int    # 変換するカードのユーザーカードID
+
+
+class ShippingStatusUpdate(BaseModel):
+    """発送ステータス更新リクエスト（管理者用）"""
+    status: str  # pending/shipped/completed

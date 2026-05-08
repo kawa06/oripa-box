@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>オリパガチャ - コレクション</title>
+  <title>オリパガチャ - カード管理</title>
   <link rel="stylesheet" href="/frontend/css/style.css">
 </head>
 <body>
@@ -18,9 +18,8 @@
     <ul class="navbar-nav">
       <li><a href="/frontend/index.html">パック一覧</a></li>
       <li><a href="/frontend/gacha.html">ガチャ</a></li>
-      <li><a href="/frontend/collection.html" class="active">コレクション</a></li>
+      <li><a href="/frontend/collection.html" class="active">カード管理</a></li>
       <li><a href="/frontend/history.html">履歴</a></li>
-      <li><a href="/frontend/exchange.html">交換所</a></li>
       <li><a href="/frontend/ranking.html">ランキング</a></li>
       <li><a href="/frontend/coins.html">コイン購入</a></li>
       <li id="nav-admin-link" class="hidden"><a href="/frontend/admin.html">管理</a></li>
@@ -35,8 +34,8 @@
 
   <div class="main-content">
     <div class="page-header fade-in">
-      <h1>コレクション</h1>
-      <p>あなたが所持しているカード一覧</p>
+      <h1>カード管理</h1>
+      <p>所持カードのコイン変換・発送申請ができます</p>
     </div>
 
     <!-- 統計バー -->
@@ -58,6 +57,113 @@
     <div id="collection-grid" class="collection-grid">
       <div class="flex-center" style="grid-column: 1 / -1; padding: 60px;">
         <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== コイン変換確認モーダル ===== -->
+  <div id="convert-modal" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(0,0,0,0.75);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  ">
+    <div style="
+      background: var(--card-bg, #1e1b2e);
+      border: 1px solid var(--border-color, #3a3a5c);
+      border-radius: 12px;
+      padding: 32px 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    ">
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 12px; color: var(--accent-gold, #f9d923);">コインに変換</h2>
+      <p id="convert-modal-text" style="color: var(--text-secondary, #a0aec0); font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;"></p>
+      <div style="display: flex; gap: 12px;">
+        <button onclick="submitConvert()" class="btn btn-primary" style="flex: 1; padding: 12px;">変換する</button>
+        <button onclick="closeConvertModal()" class="btn btn-outline" style="flex: 1; padding: 12px;">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 発送申請モーダル ===== -->
+  <div id="ship-modal" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(0,0,0,0.75);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
+  ">
+    <div style="
+      background: var(--card-bg, #1e1b2e);
+      border: 1px solid var(--border-color, #3a3a5c);
+      border-radius: 12px;
+      padding: 28px 24px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      margin: auto;
+    ">
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 6px;">発送申請</h2>
+      <p id="ship-modal-card-name" style="color: var(--text-secondary, #a0aec0); font-size: 0.9rem; margin-bottom: 20px;"></p>
+
+      <div id="ship-modal-alert" class="alert" style="margin-bottom: 12px;"></div>
+
+      <!-- 住所フォーム -->
+      <div class="form-group">
+        <label class="form-label">氏名 *</label>
+        <input type="text" id="ship-name" class="form-input" placeholder="山田 太郎">
+      </div>
+      <div class="form-group">
+        <label class="form-label">郵便番号 *</label>
+        <input type="text" id="ship-postal" class="form-input" placeholder="123-4567">
+      </div>
+      <div class="form-group">
+        <label class="form-label">都道府県 *</label>
+        <select id="ship-prefecture" class="form-input">
+          <option value="">選択してください</option>
+          <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option>
+          <option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option>
+          <option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option>
+          <option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option>
+          <option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option>
+          <option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option>
+          <option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option>
+          <option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option>
+          <option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option>
+          <option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option>
+          <option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option>
+          <option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">市区町村 *</label>
+        <input type="text" id="ship-city" class="form-input" placeholder="渋谷区">
+      </div>
+      <div class="form-group">
+        <label class="form-label">番地 *</label>
+        <input type="text" id="ship-address" class="form-input" placeholder="1-2-3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">建物名（任意）</label>
+        <input type="text" id="ship-building" class="form-input" placeholder="○○マンション 101号室">
+      </div>
+      <div class="form-group">
+        <label class="form-label">電話番号 *</label>
+        <input type="tel" id="ship-phone" class="form-input" placeholder="090-1234-5678">
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 8px;">
+        <button onclick="submitShipRequest()" class="btn btn-primary" style="flex: 1; padding: 12px;">申請する</button>
+        <button onclick="closeShipModal()" class="btn btn-outline" style="flex: 1; padding: 12px;">キャンセル</button>
       </div>
     </div>
   </div>

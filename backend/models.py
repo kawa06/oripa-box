@@ -31,6 +31,8 @@ class User(Base):
     gacha_results = relationship("GachaResult", back_populates="user")
     pity_counters = relationship("PityCounter", back_populates="user")
     user_cards = relationship("UserCard", back_populates="user")
+    shipping_addresses = relationship("ShippingAddress", back_populates="user")
+    shipping_requests = relationship("ShippingRequest", back_populates="user")
 
 
 class Pack(Base):
@@ -132,8 +134,51 @@ class UserCard(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ユーザー
     card_id = Column(Integer, ForeignKey("cards.id"), nullable=False)  # カード
     count = Column(Integer, default=1, nullable=False)  # 所持枚数
+    # カードのステータス: owned=所持中, shipping_requested=発送申請中, shipped=発送済み
+    status = Column(String, default="owned", nullable=False)
     obtained_at = Column(DateTime, default=datetime.utcnow)  # 最初に入手した日時
 
     # リレーション
     user = relationship("User", back_populates="user_cards")
     card = relationship("Card", back_populates="user_cards")
+    shipping_requests = relationship("ShippingRequest", back_populates="user_card")
+
+
+class ShippingAddress(Base):
+    """ユーザーの発送先住所モデル"""
+    __tablename__ = "shipping_addresses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ユーザー
+    name = Column(String, nullable=False)           # 氏名
+    postal_code = Column(String, nullable=False)    # 郵便番号
+    prefecture = Column(String, nullable=False)     # 都道府県
+    city = Column(String, nullable=False)           # 市区町村
+    address = Column(String, nullable=False)        # 番地
+    building = Column(String, nullable=True)        # 建物名（任意）
+    phone = Column(String, nullable=False)          # 電話番号
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # リレーション
+    user = relationship("User", back_populates="shipping_addresses")
+    shipping_requests = relationship("ShippingRequest", back_populates="address")
+
+
+class ShippingRequest(Base):
+    """発送申請モデル"""
+    __tablename__ = "shipping_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)          # ユーザー
+    user_card_id = Column(Integer, ForeignKey("user_cards.id"), nullable=False) # 発送するカード
+    address_id = Column(Integer, ForeignKey("shipping_addresses.id"), nullable=False)  # 発送先住所
+    # ステータス: pending=発送待ち, shipped=発送済み, completed=完了
+    status = Column(String, default="pending", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # リレーション
+    user = relationship("User", back_populates="shipping_requests")
+    user_card = relationship("UserCard", back_populates="shipping_requests")
+    address = relationship("ShippingAddress", back_populates="shipping_requests")
