@@ -3,7 +3,9 @@
 ガチャ実行APIエンドポイント
 確率に基づいてカードを抽選し、コインを消費する
 天井（ピティ）システム: 50回引いたらA賞確定
+パックごとにprobabilitiesフィールドで各賞の排出確率を設定可能
 """
+import json
 import random
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,28 +19,57 @@ router = APIRouter(prefix="/api/gacha", tags=["ガチャ"])
 # 天井回数（この回数引いたらA賞確定）
 PITY_LIMIT = 50
 
-# 賞の基本確率定義（合計100%）
-RARITY_PROBABILITIES = {
-    "A賞": 0.01,   # 1%
-    "B賞": 0.04,   # 4%
-    "C賞": 0.15,   # 15%
-    "D賞": 0.30,   # 30%
-    "E賞": 0.50,   # 50%
+# デフォルト賞確率（パックにprobabilitiesが未設定の場合に使用、合計100%）
+DEFAULT_RARITY_WEIGHTS = {
+    "A賞": 1,   # 1%
+    "B賞": 4,   # 4%
+    "C賞": 15,  # 15%
+    "D賞": 30,  # 30%
+    "E賞": 50,  # 50%
 }
 
 
-def draw_card(cards: list) -> models.Card:
+def get_rarity_weights(pack: models.Pack) -> dict:
     """
-    カードリストから確率に基づいて1枚を抽選する
-    各カードの設定確率を使って重み付き抽選を実施
+    パックのprobabilitiesからレアリティ別重みを取得する。
+    未設定の場合はデフォルト値を返す。
+    """
+    if pack.probabilities:
+        try:
+            weights = json.loads(pack.probabilities)
+            # キーと値が正常かチェック
+            if isinstance(weights, dict) and all(isinstance(v, (int, float)) for v in weights.values()):
+                return weights
+        except (json.JSONDecodeError, ValueError):
+            pass
+    # フォールバック: デフォルト確率を使用
+    return DEFAULT_RARITY_WEIGHTS
+
+
+def draw_card(cards: list, rarity_weights: dict) -> models.Card:
+    """
+    カードリストから賞ごとの確率に基づいて1枚を抽選する。
+    まずrarity_weightsで賞を選び、その賞のカードから均等抽選する。
     """
     if not cards:
         raise ValueError("カードリストが空です")
 
-    # 重み付きランダム選択
-    weights = [card.probability for card in cards]
-    selected = random.choices(cards, weights=weights, k=1)[0]
-    return selected
+    # カードを賞ごとにグループ化
+    rarity_groups: dict[str, list] = {}
+    for card in cards:
+        rarity_groups.setdefault(card.rarity, []).append(card)
+
+    # 存在する賞のみで重み付き賞選択
+    available_rarities = [r for r in rarity_weights if r in rarity_groups]
+    if not available_rarities:
+        # フォールバック: 全カードから均等抽選
+        return random.choice(cards)
+
+    weights = [rarity_weights[r] for r in available_rarities]
+    chosen_rarity = random.choices(available_rarities, weights=weights, k=1)[0]
+
+    # 選ばれた賞のカードから均等抽選
+    return random.choice(rarity_groups[chosen_rarity])
 
 
 def draw_ur_card(cards: list) -> models.Card:
@@ -127,12 +158,15 @@ def draw_gacha(
     pity = get_or_create_pity(db, current_user.id, pack.id)
     pity_triggered = False
 
+    # パックの賞別確率を取得（未設定の場合はデフォルト）
+    rarity_weights = get_rarity_weights(pack)
+
     # 天井発動チェック（PITY_LIMIT回に達したらA賞確定）
     if pity.count >= PITY_LIMIT - 1:
         drawn_card = draw_ur_card(cards)
         pity_triggered = True
     else:
-        drawn_card = draw_card(cards)
+        drawn_card = draw_card(cards, rarity_weights)
 
     # A賞排出時は天井カウンターをリセット
     if drawn_card.rarity == "A賞":

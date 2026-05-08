@@ -72,6 +72,7 @@ class PackResponse(BaseModel):
     max_stock: int
     image_url: Optional[str] = None
     is_active: bool
+    probabilities: Optional[str] = None  # 各賞確率JSON文字列
     cards: List[CardResponse] = []
 
     class Config:
@@ -88,6 +89,7 @@ class PackListResponse(BaseModel):
     max_stock: int
     image_url: Optional[str] = None
     is_active: bool
+    probabilities: Optional[str] = None  # 各賞確率JSON文字列
 
     class Config:
         from_attributes = True
@@ -209,6 +211,9 @@ class AdminPackCreate(BaseModel):
     max_stock: int = 100
     image_url: Optional[str] = None
     is_active: bool = True
+    # 各賞の確率設定（JSON文字列: {"A賞":5,"B賞":10,"C賞":20,"D賞":30,"E賞":35}）
+    # 合計が100でない場合は警告を返す（バリデーションはフロントエンド側でも実施）
+    probabilities: Optional[str] = None
 
 
 class AdminPackUpdate(BaseModel):
@@ -220,6 +225,8 @@ class AdminPackUpdate(BaseModel):
     max_stock: Optional[int] = None
     image_url: Optional[str] = None
     is_active: Optional[bool] = None
+    # 各賞の確率設定（JSON文字列）
+    probabilities: Optional[str] = None
 
 
 class AdminCardCreate(BaseModel):

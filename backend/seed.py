@@ -84,7 +84,9 @@ def seed():
                 stock=100,
                 max_stock=100,
                 image_url="https://placehold.co/600x400/1a1a4a/ffd700?text=%E3%82%B9%E3%82%BF%E3%83%B3%E3%83%80%E3%83%BC%E3%83%89",
-                is_active=True
+                is_active=True,
+                # 各賞の排出確率（整数%、合計100%）: A賞1% B賞4% C賞15% D賞30% E賞50%
+                probabilities='{"A賞":1,"B賞":4,"C賞":15,"D賞":30,"E賞":50}'
             )
             db.add(pack1)
             db.flush()
@@ -150,7 +152,9 @@ def seed():
                 stock=100,
                 max_stock=100,
                 image_url="https://placehold.co/600x400/1a0a2a/e879f9?text=%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0",
-                is_active=True
+                is_active=True,
+                # 各賞の排出確率（整数%、合計100%）: A賞5% B賞10% C賞20% D賞30% E賞35%（プレミアム: 上位賞が高め）
+                probabilities='{"A賞":5,"B賞":10,"C賞":20,"D賞":30,"E賞":35}'
             )
             db.add(pack2)
             db.flush()
@@ -216,7 +220,9 @@ def seed():
                 stock=100,
                 max_stock=100,
                 image_url="https://placehold.co/600x400/0a2a1a/22c55e?text=%E9%99%90%E5%AE%9A%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3",
-                is_active=True
+                is_active=True,
+                # 各賞の排出確率（整数%、合計100%）: A賞3% B賞7% C賞15% D賞25% E賞50%（限定: やや高レア率）
+                probabilities='{"A賞":3,"B賞":7,"C賞":15,"D賞":25,"E賞":50}'
             )
             db.add(pack3)
             db.flush()

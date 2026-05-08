@@ -172,6 +172,12 @@ function openPackModal(packId = null) {
   const title = document.getElementById('pack-modal-title');
   document.getElementById('pack-edit-id').value = '';
 
+  // 確率入力欄をリセット
+  ['a', 'b', 'c', 'd', 'e'].forEach(k => {
+    document.getElementById(`prob-${k}`).value = '';
+  });
+  updateProbTotal();
+
   if (packId) {
     const pack = packsCache.find(p => p.id === packId);
     if (!pack) return;
@@ -184,6 +190,19 @@ function openPackModal(packId = null) {
     document.getElementById('pack-max-stock').value = pack.max_stock;
     document.getElementById('pack-image-url').value = pack.image_url || '';
     document.getElementById('pack-is-active').checked = pack.is_active;
+
+    // probabilities JSON があれば各欄に展開
+    if (pack.probabilities) {
+      try {
+        const probs = JSON.parse(pack.probabilities);
+        if (probs['A賞'] != null) document.getElementById('prob-a').value = probs['A賞'];
+        if (probs['B賞'] != null) document.getElementById('prob-b').value = probs['B賞'];
+        if (probs['C賞'] != null) document.getElementById('prob-c').value = probs['C賞'];
+        if (probs['D賞'] != null) document.getElementById('prob-d').value = probs['D賞'];
+        if (probs['E賞'] != null) document.getElementById('prob-e').value = probs['E賞'];
+        updateProbTotal();
+      } catch {}
+    }
   } else {
     title.textContent = 'パック追加';
     document.getElementById('pack-name').value = '';
@@ -203,6 +222,36 @@ function closePackModal() {
 
 async function submitPackForm() {
   const packId = document.getElementById('pack-edit-id').value;
+
+  // 確率フィールドの収集
+  const probA = document.getElementById('prob-a').value;
+  const probB = document.getElementById('prob-b').value;
+  const probC = document.getElementById('prob-c').value;
+  const probD = document.getElementById('prob-d').value;
+  const probE = document.getElementById('prob-e').value;
+
+  // いずれか1つでも入力されていれば確率オブジェクトを作成
+  const hasAnyProb = [probA, probB, probC, probD, probE].some(v => v !== '');
+  let probabilitiesJson = null;
+
+  if (hasAnyProb) {
+    const pa = parseFloat(probA) || 0;
+    const pb = parseFloat(probB) || 0;
+    const pc = parseFloat(probC) || 0;
+    const pd = parseFloat(probD) || 0;
+    const pe = parseFloat(probE) || 0;
+    const total = pa + pb + pc + pd + pe;
+
+    // 合計が100でなければ警告を表示して処理を止める
+    if (Math.abs(total - 100) > 0.001) {
+      document.getElementById('prob-warning').style.display = 'block';
+      showAlert('admin-alert', `確率の合計が ${total}% です。合計100%になるよう設定してください`, 'error');
+      return;
+    }
+    document.getElementById('prob-warning').style.display = 'none';
+    probabilitiesJson = JSON.stringify({ 'A賞': pa, 'B賞': pb, 'C賞': pc, 'D賞': pd, 'E賞': pe });
+  }
+
   const body = {
     name: document.getElementById('pack-name').value,
     description: document.getElementById('pack-desc').value || null,
@@ -210,7 +259,8 @@ async function submitPackForm() {
     stock: parseInt(document.getElementById('pack-stock').value),
     max_stock: parseInt(document.getElementById('pack-max-stock').value),
     image_url: document.getElementById('pack-image-url').value || null,
-    is_active: document.getElementById('pack-is-active').checked
+    is_active: document.getElementById('pack-is-active').checked,
+    probabilities: probabilitiesJson
   };
 
   if (!body.name || !body.price_coins) {
@@ -380,6 +430,47 @@ async function deleteCard(cardId, cardName) {
 }
 
 // ===== ユーティリティ =====
+/**
+ * 確率入力欄の合計を計算してリアルタイム表示する
+ */
+function updateProbTotal() {
+  const ids = ['prob-a', 'prob-b', 'prob-c', 'prob-d', 'prob-e'];
+  const total = ids.reduce((sum, id) => {
+    const v = parseFloat(document.getElementById(id)?.value) || 0;
+    return sum + v;
+  }, 0);
+  const totalEl = document.getElementById('prob-total');
+  const warningEl = document.getElementById('prob-warning');
+  if (!totalEl) return;
+
+  // 入力がすべて空かチェック
+  const allEmpty = ids.every(id => document.getElementById(id)?.value === '');
+  if (allEmpty) {
+    totalEl.textContent = '—';
+    totalEl.style.color = 'var(--text-secondary)';
+    if (warningEl) warningEl.style.display = 'none';
+    return;
+  }
+
+  const rounded = Math.round(total * 1000) / 1000;
+  totalEl.textContent = `${rounded}%`;
+  if (Math.abs(rounded - 100) < 0.001) {
+    totalEl.style.color = 'var(--success, #22c55e)';
+    if (warningEl) warningEl.style.display = 'none';
+  } else {
+    totalEl.style.color = 'var(--error)';
+    if (warningEl) warningEl.style.display = 'block';
+  }
+}
+
+// 確率入力欄のイベントリスナーをDOMContentLoaded後に登録
+document.addEventListener('DOMContentLoaded', () => {
+  ['prob-a', 'prob-b', 'prob-c', 'prob-d', 'prob-e'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateProbTotal);
+  });
+});
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)

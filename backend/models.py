@@ -45,6 +45,9 @@ class Pack(Base):
     max_stock = Column(Integer, default=100, nullable=False)  # 最大在庫数
     image_url = Column(String)  # パック画像URL
     is_active = Column(Boolean, default=True)  # 販売中フラグ
+    # 各賞の排出確率設定（JSON文字列: {"A賞":5,"B賞":10,"C賞":20,"D賞":30,"E賞":35} のように整数%で指定）
+    # Noneの場合はデフォルト確率（A賞1,B賞4,C賞15,D賞30,E賞50）を使用
+    probabilities = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # リレーション
