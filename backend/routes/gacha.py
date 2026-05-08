@@ -103,6 +103,37 @@ def get_or_create_pity(db: Session, user_id: int, pack_id: int) -> models.PityCo
     return pity
 
 
+def _execute_single_draw(
+    db: Session,
+    pack: models.Pack,
+    cards: list,
+    rarity_weights: dict,
+    pity: models.PityCounter,
+    current_user: models.User
+) -> tuple:
+    """
+    1回分のガチャ抽選ロジック（まとめ引きからも呼び出せる共通処理）
+    戻り値: (drawn_card, pity_triggered)
+    天井カウンターの更新・コイン消費・在庫減算・DB記録は呼び出し元で行う
+    """
+    pity_triggered = False
+
+    # 天井発動チェック（PITY_LIMIT回に達したらA賞確定）
+    if pity.count >= PITY_LIMIT - 1:
+        drawn_card = draw_ur_card(cards)
+        pity_triggered = True
+    else:
+        drawn_card = draw_card(cards, rarity_weights)
+
+    # A賞排出時は天井カウンターをリセット
+    if drawn_card.rarity == "A賞":
+        pity.count = 0
+    else:
+        pity.count += 1
+
+    return drawn_card, pity_triggered
+
+
 @router.post("/draw", response_model=schemas.GachaResultResponse)
 def draw_gacha(
     request: schemas.GachaRequest,
@@ -110,13 +141,19 @@ def draw_gacha(
     db: Session = Depends(get_db)
 ):
     """
-    ガチャを1回実行する
-    - コインを消費してパックからカードを1枚抽選
-    - 在庫を1減らす
-    - 結果をDBに記録する
-    - 天井システム: 50回でA賞確定、A賞排出でカウンターリセット
-    - コレクションに追加（UserCard テーブル）
+    ガチャを実行する（count=1 の場合は単発、10/100はまとめ引きへリダイレクト）
+    - countが10または100の場合は /draw/multi エンドポイントと同等の処理を行う
+    - 後方互換のため、count=1 の場合は従来どおり GachaResultResponse を返す
     """
+    # まとめ引きの場合は専用エンドポイントへ委譲
+    if request.count > 1:
+        multi_result = draw_gacha_multi(request, current_user, db)
+        # まとめ引き結果の最後のカードを1回引きレスポンス形式に変換して返す
+        last = multi_result.cards[-1]
+        return last
+
+    # --- 以下は count=1 の通常1回引き処理 ---
+
     # パック取得（在庫チェック含む）
     pack = db.query(models.Pack).filter(
         models.Pack.id == request.pack_id,
@@ -156,23 +193,12 @@ def draw_gacha(
 
     # 天井カウンター取得
     pity = get_or_create_pity(db, current_user.id, pack.id)
-    pity_triggered = False
 
     # パックの賞別確率を取得（未設定の場合はデフォルト）
     rarity_weights = get_rarity_weights(pack)
 
-    # 天井発動チェック（PITY_LIMIT回に達したらA賞確定）
-    if pity.count >= PITY_LIMIT - 1:
-        drawn_card = draw_ur_card(cards)
-        pity_triggered = True
-    else:
-        drawn_card = draw_card(cards, rarity_weights)
-
-    # A賞排出時は天井カウンターをリセット
-    if drawn_card.rarity == "A賞":
-        pity.count = 0
-    else:
-        pity.count += 1
+    # 抽選
+    drawn_card, pity_triggered = _execute_single_draw(db, pack, cards, rarity_weights, pity, current_user)
 
     pity.updated_at = datetime.utcnow()
 
@@ -227,6 +253,157 @@ def draw_gacha(
         pack_remaining_stock=pack.stock,
         pity_count=pity.count,
         pity_triggered=pity_triggered
+    )
+
+
+@router.post("/draw/multi", response_model=schemas.MultiGachaResultResponse)
+def draw_gacha_multi(
+    request: schemas.GachaRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    まとめ引きガチャを実行する（10回 / 100回）
+    - コイン消費: パック価格 × count
+    - 在庫チェック: 残り在庫 >= count でなければエラー
+    - 天井カウンターもcount分加算
+    - 結果を配列で返す
+    """
+    count = request.count
+
+    # 許可する枚数: 1, 10, 100
+    if count not in (1, 10, 100):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="countは1、10、100のいずれかで指定してください"
+        )
+
+    # パック取得
+    pack = db.query(models.Pack).filter(
+        models.Pack.id == request.pack_id,
+        models.Pack.is_active == True
+    ).first()
+
+    if not pack:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたパックが見つかりません"
+        )
+
+    # 在庫チェック（まとめ引き分の在庫が必要）
+    if pack.stock < count:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"在庫が不足しています（必要: {count}口、残在庫: {pack.stock}口）"
+        )
+
+    # コイン残高チェック（まとめ引き分のコインが必要）
+    total_cost = pack.price_coins * count
+    if current_user.coin_balance < total_cost:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"コインが不足しています（必要: {total_cost}コイン、残高: {current_user.coin_balance}コイン）"
+        )
+
+    # パックのカードリスト取得
+    cards = db.query(models.Card).filter(
+        models.Card.pack_id == pack.id
+    ).all()
+
+    if not cards:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="パックにカードが設定されていません"
+        )
+
+    # 天井カウンター取得
+    pity = get_or_create_pity(db, current_user.id, pack.id)
+
+    # パックの賞別確率を取得
+    rarity_weights = get_rarity_weights(pack)
+
+    # ======== count回分のガチャを実行 ========
+    results = []
+    rarity_summary: dict[str, int] = {}
+
+    for _ in range(count):
+        drawn_card, pity_triggered = _execute_single_draw(db, pack, cards, rarity_weights, pity, current_user)
+
+        # ガチャ結果をDBに記録
+        gacha_result = models.GachaResult(
+            user_id=current_user.id,
+            pack_id=pack.id,
+            card_id=drawn_card.id,
+            coins_spent=pack.price_coins
+        )
+        db.add(gacha_result)
+
+        # コレクション（UserCard）に追加
+        existing_uc = db.query(models.UserCard).filter(
+            models.UserCard.user_id == current_user.id,
+            models.UserCard.card_id == drawn_card.id
+        ).first()
+        if existing_uc:
+            existing_uc.count += 1
+        else:
+            db.add(models.UserCard(
+                user_id=current_user.id,
+                card_id=drawn_card.id,
+                count=1
+            ))
+
+        # サマリー集計
+        rarity_summary[drawn_card.rarity] = rarity_summary.get(drawn_card.rarity, 0) + 1
+
+        # 各回の結果を格納（残高/在庫は後でまとめて更新）
+        results.append({
+            "card": drawn_card,
+            "pity_triggered": pity_triggered,
+        })
+
+    # コインをまとめて消費
+    current_user.coin_balance -= total_cost
+
+    # 在庫をまとめて減算
+    pack.stock -= count
+
+    pity.updated_at = datetime.utcnow()
+
+    # コイン消費履歴を1件まとめて記録
+    coin_transaction = models.CoinTransaction(
+        user_id=current_user.id,
+        amount=-total_cost,
+        transaction_type="gacha",
+        description=f"{pack.name}のガチャを{count}回実行"
+    )
+    db.add(coin_transaction)
+
+    db.commit()
+    db.refresh(current_user)
+    db.refresh(pack)
+    db.refresh(pity)
+
+    # レスポンス構築
+    card_responses = [
+        schemas.GachaResultResponse(
+            card=r["card"],
+            coins_spent=pack.price_coins,
+            remaining_balance=current_user.coin_balance,
+            pack_remaining_stock=pack.stock,
+            pity_count=pity.count,
+            pity_triggered=r["pity_triggered"]
+        )
+        for r in results
+    ]
+
+    return schemas.MultiGachaResultResponse(
+        cards=card_responses,
+        total_coins_spent=total_cost,
+        remaining_balance=current_user.coin_balance,
+        pack_remaining_stock=pack.stock,
+        pity_count=pity.count,
+        count=count,
+        rarity_summary=rarity_summary
     )
 
 

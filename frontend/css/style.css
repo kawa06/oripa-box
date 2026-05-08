@@ -1684,8 +1684,114 @@ body {
 }
 
 /* =============================================
-   利用規約・特商法ページ
+   まとめ引き演出（10回・100回）
    ============================================= */
+
+/* まとめ引きステージ全体 */
+.gacha-stage-multi,
+.gacha-stage-100 {
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  padding: 24px 16px;
+}
+
+/* まとめ引きヘッダー（タイトル + コスト表示） */
+.multi-stage-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* 10枚グリッド */
+.multi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto 16px;
+}
+
+/* 各カードスロット */
+.multi-card-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* まとめ引きフッター（全部開くボタン等） */
+.multi-stage-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* フリップヒント（まとめ引き用） */
+.flip-hint-multi {
+  color: rgba(255,255,255,0.6);
+  font-size: 0.85rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* 100回引きステージ内コンテナ */
+.hundred-stage-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+/* レアカード演出エリア */
+.rare-highlight-section {
+  width: 100%;
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+/* レアカード横並びコンテナ */
+.rare-cards-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* モバイル: 10枚グリッドを2列に */
+@media (max-width: 600px) {
+  .multi-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .multi-cards-grid .card-flip-container {
+    width: 100%;
+    max-width: 140px;
+    height: 200px;
+  }
+
+  .hundred-stage-inner {
+    max-width: 100%;
+  }
+}
+
+/* =============================================
+   まとめ引き CSS END
+   ============================================= */
+
 
 .legal-container {
   max-width: 800px;

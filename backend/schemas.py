@@ -98,18 +98,31 @@ class PackListResponse(BaseModel):
 # ===== ガチャ関連スキーマ =====
 
 class GachaRequest(BaseModel):
-    """ガチャ実行リクエスト"""
+    """ガチャ実行リクエスト（1回 / 10回 / 100回）"""
     pack_id: int
+    count: int = 1  # 引く枚数（1, 10, 100）
 
 
 class GachaResultResponse(BaseModel):
-    """ガチャ結果レスポンス"""
+    """ガチャ結果レスポンス（1回引き）"""
     card: CardResponse
     coins_spent: int
     remaining_balance: int
     pack_remaining_stock: int
     pity_count: int = 0          # 現在の天井カウント（A賞排出後はリセット済み）
     pity_triggered: bool = False  # 天井が発動したかどうか
+
+
+class MultiGachaResultResponse(BaseModel):
+    """まとめ引きガチャ結果レスポンス（10回・100回）"""
+    cards: List[GachaResultResponse]   # 各回の結果リスト
+    total_coins_spent: int             # 消費コイン合計
+    remaining_balance: int             # 引き後のコイン残高
+    pack_remaining_stock: int          # 引き後の在庫
+    pity_count: int = 0                # 最終天井カウント
+    count: int = 1                     # 実際に引いた枚数
+    # サマリー情報（100回引き用）
+    rarity_summary: dict = {}          # 賞ごとの枚数 {"A賞": 1, "B賞": 3, ...}
 
 
 # ===== コイン関連スキーマ =====

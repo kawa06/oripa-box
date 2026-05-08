@@ -56,22 +56,48 @@
       </section>
 
       <!-- ガチャ実行エリア -->
-      <section style="width: 100%; max-width: 400px;">
+      <section style="width: 100%; max-width: 480px;">
         <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary); text-align: center;">
           2. ガチャを引く
         </h2>
         <div class="gacha-action">
           <p id="selected-pack-info" class="hidden" style="color: var(--accent-gold); font-weight: 600;"></p>
+
+          <!-- 1回引きボタン -->
           <button
             id="gacha-btn"
             class="btn btn-gold btn-lg"
             disabled
             style="width: 100%; font-size: 1.2rem; padding: 20px;"
+            data-count="1"
           >
             パックを選択してください
           </button>
+
+          <!-- 10回引き / 100回引きボタン（パック選択後に表示） -->
+          <div id="multi-draw-btns" class="hidden" style="display: none; width: 100%; gap: 12px; flex-direction: column; margin-top: 8px;">
+            <button
+              id="gacha-btn-10"
+              class="btn btn-primary btn-lg"
+              style="width: 100%; font-size: 1rem; padding: 16px;"
+              data-count="10"
+              onclick="executeGachaMulti(10)"
+            >
+              10回引く
+            </button>
+            <button
+              id="gacha-btn-100"
+              class="btn btn-outline btn-lg"
+              style="width: 100%; font-size: 1rem; padding: 16px; border-color: var(--accent-gold); color: var(--accent-gold);"
+              data-count="100"
+              onclick="executeGachaMulti(100)"
+            >
+              100回引く
+            </button>
+          </div>
+
           <p style="color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
-            1回につき設定コインを消費します。1枚のカードが排出されます。
+            1回につき設定コインを消費します。
           </p>
           <a href="/frontend/coins.html" style="color: var(--accent-purple); font-size: 0.9rem; text-decoration: none;">
             コインが不足していますか？ →購入する
