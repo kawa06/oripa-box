@@ -14,8 +14,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "oripa-gacha-secret-key-change-in-productio
 # JWTアルゴリズム
 ALGORITHM = "HS256"
 
-# JWTトークンの有効期限（分）
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24時間
+# JWTトークンの有効期限（分）— 7日間（10080分）に設定してログアウト頻度を下げる
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7日間
 
 # Stripeの秘密鍵（バックエンドのみで使用 - 絶対に外部に公開しないこと）
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_your_stripe_secret_key_here")

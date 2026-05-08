@@ -953,31 +953,184 @@ body {
 .history-rarity-dot.R, .history-rarity-dot.D賞 { background: var(--rarity-r); }
 .history-rarity-dot.N, .history-rarity-dot.E賞 { background: var(--rarity-n); }
 
+/* ===== ハンバーガーメニューボタン（スマホ専用） ===== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 1100;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* ハンバーガーを×に変形するアニメーション */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 /* ===== レスポンシブデザイン ===== */
 @media (max-width: 768px) {
+  /* ナビバー：ハンバーガーメニューに変更 */
   .navbar {
     padding: 0 16px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 56px;
+    position: relative;
   }
 
+  .navbar-brand {
+    font-size: 1.2rem;
+    padding: 12px 0;
+  }
+
+  /* ハンバーガーボタン表示 */
+  .hamburger {
+    display: flex;
+  }
+
+  /* ナビリンク一覧：初期は非表示、open時にドロップダウン */
+  .navbar-nav {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    background: rgba(18, 18, 42, 0.98);
+    border-top: 1px solid var(--border-color);
+    padding: 8px 0;
+    order: 99; /* ナビリンクを一番下に配置 */
+  }
+
+  .navbar-nav.open {
+    display: flex;
+  }
+
+  .navbar-nav li {
+    width: 100%;
+  }
+
+  .navbar-nav a {
+    display: block;
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 0;
+    min-height: 44px; /* タップしやすい高さ */
+    display: flex;
+    align-items: center;
+  }
+
+  /* コイン残高・認証エリアも折りたたみ内に含める */
+  .navbar > div:last-child {
+    order: 2;
+  }
+
+  /* メインコンテンツ余白調整 */
   .main-content {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 
+  /* ページヘッダー文字サイズ調整 */
   .page-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 
+  .page-header p {
+    font-size: 0.95rem;
+  }
+
+  /* パック一覧：スマホで1列 */
   .pack-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
+  /* コイン購入カード：スマホで1列 */
   .coin-pack-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
+  /* ガチャカードサイズ縮小 */
   .card-flip-container {
-    width: 240px;
-    height: 340px;
+    width: 200px;
+    height: 280px;
+  }
+
+  /* ボタン：タップしやすい最低44px高さ確保 */
+  .btn {
+    min-height: 44px;
+    font-size: 0.95rem;
+    padding: 10px 18px;
+  }
+
+  .btn-lg {
+    padding: 14px 24px;
+    font-size: 1rem;
+  }
+
+  /* フォーム入力欄：文字が小さくならないように */
+  .form-input {
+    font-size: 16px; /* iOSのズーム防止には16px以上が必要 */
+    min-height: 44px;
+  }
+
+  /* 認証コンテナ：スマホで余白縮小 */
+  .auth-container {
+    margin: 20px auto;
+    padding: 24px 20px;
+  }
+
+  /* カード画像がはみ出さないように */
+  .pack-image img,
+  .card-art img,
+  .prize-preview-img,
+  .history-card-img {
+    max-width: 100%;
+  }
+
+  /* パック画像エリアの高さを調整 */
+  .pack-image {
+    height: 160px;
+  }
+
+  /* テキスト最低14px確保 */
+  body {
+    font-size: 14px;
+  }
+
+  .pack-description {
+    font-size: 0.875rem; /* 14px */
+  }
+
+  .pack-name {
+    font-size: 1.1rem;
+  }
+
+  /* フッターリンク間隔縮小 */
+  .footer-links {
+    gap: 12px;
+  }
+
+  .footer-links a,
+  .pack-footer-links a {
+    font-size: 0.8rem;
   }
 }
 
@@ -1573,28 +1726,56 @@ body {
    ============================================= */
 
 @media (max-width: 768px) {
+  /* コレクショングリッド */
   .collection-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px;
   }
 
+  /* 統計行の間隔縮小 */
   .stats-row {
     gap: 16px;
   }
 
+  /* ランキング行の余白縮小 */
   .ranking-row {
     padding: 12px 14px;
   }
 
+  /* 特商法テーブルのth幅縮小 */
   .legal-table th {
-    width: 120px;
+    width: 100px;
+    font-size: 0.85rem;
+    padding: 10px 8px;
+    white-space: normal;
+  }
+
+  .legal-table td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+
+  /* 管理モーダル：スマホでフルスクリーンに近いサイズ */
+  .admin-modal {
+    padding: 8px;
   }
 
   .admin-modal-inner {
     max-width: 100%;
+    padding: 20px 16px;
+    max-height: 95vh;
   }
 
+  /* 交換所レート表示 */
   .exchange-rate-table .rate-row {
     gap: 8px;
+  }
+
+  /* ガチャステージのモーダル：スマホで大きく表示 */
+  .gacha-stage .card-flip-container {
+    width: 85vw;
+    max-width: 280px;
+    height: calc(85vw * 1.43);
+    max-height: 400px;
   }
 }

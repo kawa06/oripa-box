@@ -228,11 +228,47 @@ async function updateNavbar() {
   }
 }
 
-// ページ読み込み時にナビゲーション更新 + フッター挿入
+// ページ読み込み時にナビゲーション更新 + フッター挿入 + ハンバーガーメニュー初期化
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbar();
   insertFooter();
+  initHamburger();
 });
+
+/**
+ * ハンバーガーメニューのトグル処理を初期化する
+ * .hamburger ボタンをクリックすると .navbar-nav に .open クラスを付け外しする
+ */
+function initHamburger() {
+  const hamburger = document.querySelector('.hamburger');
+  const navList = document.querySelector('.navbar-nav');
+  if (!hamburger || !navList) return;
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = navList.classList.toggle('open');
+    hamburger.classList.toggle('open', isOpen);
+    // アクセシビリティ属性を更新
+    hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  // ナビリンクをタップしたらメニューを閉じる
+  navList.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navList.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // メニュー外タップで閉じる
+  document.addEventListener('click', (e) => {
+    if (!hamburger.contains(e.target) && !navList.contains(e.target)) {
+      navList.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 
 /**
  * 全ページ共通フッターを動的に挿入する

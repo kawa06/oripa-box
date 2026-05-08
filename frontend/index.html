@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -10,6 +10,11 @@
   <!-- ナビゲーションバー -->
   <nav class="navbar">
     <a href="/frontend/index.html" class="navbar-brand">✦ オリパガチャ</a>
+    <button class="hamburger" aria-label="メニューを開く" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <ul class="navbar-nav">
       <li><a href="/frontend/index.html" class="active">パック一覧</a></li>
       <li><a href="/frontend/gacha.html">ガチャ</a></li>
@@ -34,35 +39,6 @@
     <!-- ページヘッダー -->
     <div class="page-header fade-in">
       <h1>オリパガチャ</h1>
-      <p>トレーディングカードのオリジナルパックを開封しよう！</p>
-    </div>
-
-    <!-- ヒーローバナー -->
-    <div style="
-      background: linear-gradient(135deg, #12122a, #1a1a4a, #2a1a5a);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 48px 32px;
-      text-align: center;
-      margin-bottom: 48px;
-      position: relative;
-      overflow: hidden;
-    " class="fade-in">
-      <div style="
-        position: absolute; inset: 0;
-        background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
-        pointer-events: none;
-      "></div>
-      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 16px;">
-        オリジナルパックを開封しよう！
-      </h2>
-      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 1.05rem;">
-        各パックは100口限定！A賞〜E賞のカードが封入されています。
-      </p>
-      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-        <a href="/frontend/gacha.html" class="btn btn-gold btn-lg">🎲 ガチャを引く</a>
-        <a href="/frontend/coins.html" class="btn btn-outline btn-lg">🪙 コインを購入</a>
-      </div>
     </div>
 
     <!-- パック一覧 -->
