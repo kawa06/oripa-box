@@ -127,10 +127,13 @@
   <script src="/frontend/js/app.js"></script>
   <script src="/frontend/js/gacha.js"></script>
   <script>
-    // URLパラメータでパックが指定されていれば自動選択する
+    // URLパラメータでパックが指定されていれば自動選択 + autocount があれば即実行する
     document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const packId = params.get('pack');
+      // autocount: トップページの「直接引く」ボタンから遷移した場合に設定される（1/10/100）
+      const autoCount = params.get('autocount') ? parseInt(params.get('autocount'), 10) : null;
+
       if (packId) {
         // パック読み込み後に自動選択
         const checkInterval = setInterval(() => {
@@ -139,6 +142,17 @@
             clearInterval(checkInterval);
             selectPack(parseInt(packId), packCard);
             packCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // autocountが指定されている場合は自動でガチャを実行する
+            if (autoCount) {
+              setTimeout(() => {
+                if (autoCount === 1) {
+                  executeGacha(1);
+                } else {
+                  executeGachaMulti(autoCount);
+                }
+              }, 300);
+            }
           }
         }, 200);
         // 5秒で諦める

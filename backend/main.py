@@ -15,6 +15,36 @@ from backend import config, models
 # テーブルが存在しない場合は自動作成
 Base.metadata.create_all(bind=engine)
 
+# ===== 起動時マイグレーション =====
+# 既存テーブルに不足カラムを追加する（ALTER TABLE）
+# カラムが既に存在する場合はエラーを無視する
+_MISSING_COLUMNS = [
+    # (テーブル名, カラム名, カラム定義SQL)
+    ("users", "is_verified",  "BOOLEAN DEFAULT 1 NOT NULL"),
+    ("users", "is_admin",     "BOOLEAN DEFAULT 0 NOT NULL"),
+    ("users", "is_active",    "BOOLEAN DEFAULT 1 NOT NULL"),
+    ("users", "points",       "INTEGER DEFAULT 0 NOT NULL"),
+    ("packs", "probabilities","TEXT"),
+    ("packs", "image_url",    "TEXT"),
+    ("cards", "image_url",    "TEXT"),
+]
+
+_raw_conn = engine.raw_connection()
+try:
+    _cur = _raw_conn.cursor()
+    for table, col, coldef in _MISSING_COLUMNS:
+        try:
+            _cur.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coldef}")
+            print(f"[マイグレーション] {table}.{col} を追加しました")
+        except Exception:
+            # カラムが既に存在する場合は無視
+            pass
+    _raw_conn.commit()
+except Exception as e:
+    print(f"[マイグレーション] エラー: {e}")
+finally:
+    _raw_conn.close()
+
 # SMTP未設定の環境では、既存ユーザーの is_verified を全件 True に更新する
 # （SMTPが設定されていない状態で登録したユーザーがログインできない問題を修正）
 if not config.SMTP_ENABLED:

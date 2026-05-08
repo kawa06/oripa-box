@@ -109,6 +109,27 @@
           // 賞別カード画像プレビュー（各賞の代表カードを表示）
           const prizePreviewHTML = buildPrizePreview(pack.cards || [], prizeColors, prizeOrder);
 
+          // 直接ガチャボタンHTML（在庫あり時のみ表示）
+          const directBtnsHTML = pack.stock > 0 ? `
+            <div class="pack-direct-btns" style="display: flex; gap: 6px; padding: 0 12px 12px; flex-wrap: wrap;">
+              <button
+                class="btn btn-gold"
+                style="flex: 1; min-width: 70px; font-size: 0.85rem; padding: 8px 4px;"
+                onclick="directGacha(event, ${pack.id}, 1)"
+              >1回引く</button>
+              <button
+                class="btn btn-primary"
+                style="flex: 1; min-width: 70px; font-size: 0.85rem; padding: 8px 4px;"
+                onclick="directGacha(event, ${pack.id}, 10)"
+              >10回引く</button>
+              <button
+                class="btn btn-outline"
+                style="flex: 1; min-width: 70px; font-size: 0.85rem; padding: 8px 4px; border-color: var(--accent-gold); color: var(--accent-gold);"
+                onclick="directGacha(event, ${pack.id}, 100)"
+              >100回引く</button>
+            </div>
+          ` : '';
+
           return `
             <div class="pack-card fade-in" onclick="window.location.href='/frontend/gacha.html?pack=${pack.id}'"
                  style="cursor: pointer;">
@@ -131,10 +152,11 @@
                 </div>
               </div>
               ${prizePreviewHTML}
+              ${directBtnsHTML}
               <div class="pack-footer">
                 <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
                 ${pack.stock > 0
-                  ? `<a href="/frontend/gacha.html?pack=${pack.id}" class="btn btn-primary">引いてみる</a>`
+                  ? `<a href="/frontend/gacha.html?pack=${pack.id}" class="btn btn-primary" onclick="event.stopPropagation()">詳細</a>`
                   : `<button class="btn btn-outline" disabled>売り切れ</button>`
                 }
               </div>
@@ -151,6 +173,28 @@
         `;
       }
     });
+
+    /**
+     * トップページから直接ガチャを引く
+     * 未ログインの場合はログインページへ遷移する
+     * @param {Event} e - クリックイベント（バブリング防止用）
+     * @param {number} packId - パックID
+     * @param {number} count - 引く枚数（1 / 10 / 100）
+     */
+    function directGacha(e, packId, count) {
+      // 親カードのonclickへのバブリングを防ぐ
+      e.stopPropagation();
+
+      // 未ログインならログインページへ遷移
+      if (!getToken()) {
+        window.location.href = '/frontend/login.html';
+        return;
+      }
+
+      // ガチャページにパックIDと引く枚数を付けて遷移
+      // gacha.html側でURLパラメータを読んでパック自動選択 + 即実行する
+      window.location.href = `/frontend/gacha.html?pack=${packId}&autocount=${count}`;
+    }
 
     /**
      * パック名から絵文字を返す
