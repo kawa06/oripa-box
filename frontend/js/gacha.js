@@ -57,44 +57,113 @@ async function loadPacks() {
       return;
     }
 
-    container.innerHTML = packs.map(pack => `
-      <div class="pack-card" onclick="selectPack(${pack.id}, this)"
-           data-pack-id="${pack.id}"
-           data-price="${pack.price_coins}"
-           data-stock="${pack.stock}"
-           data-max-stock="${pack.max_stock}"
-           style="cursor: pointer;">
-        <div class="pack-image">
-          <span>${getPackEmoji(pack.name)}</span>
-          ${pack.stock === 0 ? '<span class="badge-soldout">SOLD OUT</span>' : ''}
-        </div>
-        <div class="pack-body">
-          <h3 class="pack-name">${pack.name}</h3>
-          <p class="pack-description">${pack.description || ''}</p>
-          <div class="stock-bar">
-            <div class="stock-bar-label">
-              <span>在庫</span>
-              <span>${pack.stock} / ${pack.max_stock}口</span>
-            </div>
-            <div class="stock-bar-track">
-              <div class="stock-bar-fill ${pack.stock / pack.max_stock < 0.2 ? 'low' : ''}"
-                   style="width: ${(pack.stock / pack.max_stock) * 100}%"></div>
+    container.innerHTML = packs.map(pack => {
+      const stockPercent = (pack.stock / pack.max_stock) * 100;
+      const isLow = stockPercent < 20;
+
+      // パック画像（image_urlがあれば画像表示、なければ絵文字）
+      const packImageHTML = pack.image_url
+        ? `<img src="${pack.image_url}" alt="${pack.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+        : `<span style="font-size: 4rem;">${getPackEmoji(pack.name)}</span>`;
+
+      // 賞別カードプレビュー
+      const prizePreviewHTML = buildPrizePreview(pack.cards || []);
+
+      return `
+        <div class="pack-card" onclick="selectPack(${pack.id}, this)"
+             data-pack-id="${pack.id}"
+             data-price="${pack.price_coins}"
+             data-stock="${pack.stock}"
+             data-max-stock="${pack.max_stock}"
+             style="cursor: pointer;">
+          <div class="pack-image">
+            ${packImageHTML}
+            ${pack.stock === 0 ? '<span class="badge-soldout">SOLD OUT</span>' : ''}
+          </div>
+          <div class="pack-body">
+            <h3 class="pack-name">${pack.name}</h3>
+            <p class="pack-description">${pack.description || ''}</p>
+            <div class="stock-bar">
+              <div class="stock-bar-label">
+                <span>在庫</span>
+                <span>${pack.stock} / ${pack.max_stock}口 ${isLow ? '⚠️ 残りわずか' : ''}</span>
+              </div>
+              <div class="stock-bar-track">
+                <div class="stock-bar-fill ${isLow ? 'low' : ''}"
+                     style="width: ${stockPercent}%"></div>
+              </div>
             </div>
           </div>
+          ${prizePreviewHTML}
+          <div class="pack-footer">
+            <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
+            ${pack.stock > 0
+              ? `<button class="btn btn-primary" onclick="selectPack(${pack.id}, this.closest('.pack-card')); event.stopPropagation();">選択</button>`
+              : `<button class="btn btn-outline" disabled>売り切れ</button>`
+            }
+          </div>
         </div>
-        <div class="pack-footer">
-          <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
-          ${pack.stock > 0
-            ? `<button class="btn btn-primary" onclick="selectPack(${pack.id}, this.closest('.pack-card')); event.stopPropagation();">選択</button>`
-            : `<button class="btn btn-outline" disabled>売り切れ</button>`
-          }
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
   } catch (err) {
     container.innerHTML = `<p style="color: var(--error);">パックの読み込みに失敗しました: ${err.message}</p>`;
   }
+}
+
+/**
+ * 賞別カードプレビューHTMLを生成する（index.htmlと共通ロジック）
+ * @param {Array} cards - パックのカードリスト
+ */
+function buildPrizePreview(cards) {
+  if (!cards || cards.length === 0) return '';
+
+  const prizeColors = {
+    'A賞': '#ffd700',
+    'B賞': '#e879f9',
+    'C賞': '#a78bfa',
+    'D賞': '#38bdf8',
+    'E賞': '#94a3b8',
+  };
+  const prizeOrder = ['A賞', 'B賞', 'C賞', 'D賞', 'E賞'];
+
+  // 各賞のカードをグループ化
+  const prizeMap = {};
+  prizeOrder.forEach(p => { prizeMap[p] = []; });
+  for (const card of cards) {
+    if (prizeMap[card.rarity]) prizeMap[card.rarity].push(card);
+  }
+
+  const sections = prizeOrder.map(prize => {
+    const prizeCards = prizeMap[prize];
+    const color = prizeColors[prize] || '#666';
+
+    const cardImgs = prizeCards.map(card => {
+      return card.image_url
+        ? `<img src="${card.image_url}" alt="${card.name}" class="prize-preview-img"
+                title="${card.name}" style="border-color: ${color};">`
+        : `<div class="prize-preview-placeholder"
+                title="${card.name}" style="background: ${color}11; border-color: ${color}88;">
+             <span style="font-size: 0.75rem;">${prize[0]}</span>
+           </div>`;
+    }).join('');
+
+    const displayHtml = prizeCards.length > 0
+      ? cardImgs
+      : `<div class="prize-preview-placeholder"
+              style="background: ${color}11; border-color: ${color}44; opacity:0.4;">
+           <span style="font-size: 0.75rem;">${prize[0]}</span>
+         </div>`;
+
+    return `
+      <div class="prize-preview-section">
+        <span class="prize-preview-label" style="color: ${color};">${prize}</span>
+        <div class="prize-preview-imgs">${displayHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `<div class="pack-prize-preview">${sections}</div>`;
 }
 
 /**
