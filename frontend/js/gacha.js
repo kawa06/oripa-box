@@ -704,6 +704,12 @@ function buildCardFrontHTML(card) {
     ? `<img src="${card.image_url}" alt="${card.name}">`
     : `<span style="font-size: 5rem;">${emoji}</span>`;
 
+  // 変換コイン数の表示（coin_valueがある場合のみ）
+  // デフォルト値: E賞=10, D賞=30, C賞=100, B賞=300, A賞=1000
+  const defaultCoinValues = { 'A賞': 1000, 'B賞': 300, 'C賞': 100, 'D賞': 30, 'E賞': 10 };
+  const coinValue = card.coin_value != null ? card.coin_value : (defaultCoinValues[card.rarity] || 10);
+  const coinHTML = `<p class="gacha-card-coin">🪙 ${coinValue}コイン</p>`;
+
   return `
     <div class="card-art" style="border: 2px solid ${color}">
       ${artContent}
@@ -714,6 +720,7 @@ function buildCardFrontHTML(card) {
       </span>
       <p class="card-name" style="color: ${color};">${card.name}</p>
       <p style="font-size: 0.8rem; color: var(--text-secondary);">${card.description || ''}</p>
+      ${coinHTML}
     </div>
   `;
 }

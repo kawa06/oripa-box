@@ -1,6 +1,7 @@
 /**
  * collection.js - カード管理画面スクリプト
  * 所持カード一覧の表示・コイン変換・発送申請・一括操作を担当する
+ * ドラッグ/スワイプでなぞって複数選択に対応
  */
 
 let currentRarity = '';
@@ -14,6 +15,10 @@ const selectedCardIds = new Set();
 // 現在表示中のカード一覧（全件）
 let currentCards = [];
 
+// ===== ドラッグ選択用の状態管理 =====
+let isDragging = false;          // ドラッグ中かどうか
+let dragStartedOnCard = false;   // カード上でドラッグ開始したか
+
 document.addEventListener('DOMContentLoaded', async () => {
   requireAuth();
   // 管理者リンク表示制御
@@ -25,6 +30,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadStats();
   await loadCollection('');
+
+  // ===== ドラッグ/スワイプでなぞり選択のイベント登録 =====
+  // グリッドに対して pointerdown/pointermove/pointerup を監視する
+  const grid = document.getElementById('collection-grid');
+  if (grid) {
+    // pointerdown: ドラッグ開始
+    grid.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.collection-card');
+      if (card && card.querySelector('.card-checkbox')) {
+        // owned カードの上でドラッグ開始
+        isDragging = true;
+        dragStartedOnCard = true;
+        // スクロールを妨げないように setPointerCapture は不使用
+        // タッチのデフォルトスクロールを抑制（グリッド上のみ）
+        e.preventDefault();
+      } else {
+        isDragging = false;
+        dragStartedOnCard = false;
+      }
+    });
+
+    // pointermove: なぞり中にカードを選択する
+    grid.addEventListener('pointermove', (e) => {
+      if (!isDragging || !dragStartedOnCard) return;
+      // pointer の位置にある要素を取得
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el) return;
+      const card = el.closest('.collection-card');
+      if (!card) return;
+      const chk = card.querySelector('.card-checkbox');
+      if (!chk || chk.checked) return; // 既に選択済みはスキップ
+      // カードIDを取得して選択状態に
+      const cardId = parseInt(card.id.replace('card-wrap-', ''), 10);
+      if (isNaN(cardId)) return;
+      chk.checked = true;
+      toggleCardSelection(cardId, true);
+    });
+
+    // pointerup: ドラッグ終了
+    grid.addEventListener('pointerup', () => {
+      isDragging = false;
+      dragStartedOnCard = false;
+    });
+
+    // pointercancel: タッチキャンセル時
+    grid.addEventListener('pointercancel', () => {
+      isDragging = false;
+      dragStartedOnCard = false;
+    });
+  }
 });
 
 // ===== コレクション統計 =====

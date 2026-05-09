@@ -1710,12 +1710,15 @@ body {
 
 /* 10枚グリッド */
 .multi-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
   gap: 8px;
   max-width: 700px;
   width: 100%;
   margin: 0 auto 16px;
+  text-align: center;
 }
 
 /* 各カードスロット */
@@ -1772,19 +1775,23 @@ body {
   flex-wrap: wrap;
 }
 
-/* モバイル: 10枚グリッドを2列に */
+/* モバイル: 10枚グリッドのカードサイズを縮小 */
 @media (max-width: 600px) {
   .multi-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-    /* スマホでもグリッドアイテムを中央寄せ */
-    justify-items: center;
     gap: 6px;
+    justify-content: center;
   }
 
+  /* スマホ時の10連カードサイズを小さく */
   .multi-cards-grid .card-flip-container {
-    width: 100%;
-    max-width: 140px;
-    height: 200px;
+    width: 80px !important;
+    height: 112px !important;
+    min-width: 80px;
+  }
+
+  .multi-card-slot {
+    width: 80px;
+    height: 112px;
   }
 
   .hundred-stage-inner {
@@ -1915,4 +1922,28 @@ body {
     height: calc(85vw * 1.43);
     max-height: 400px;
   }
+}
+
+/* ===== selectとoptionのダークテーマ対応 ===== */
+/* ブラウザのselectドロップダウンを暗い背景に統一する */
+select.form-input,
+select {
+  background-color: #2a2a3e;
+  color: #ffffff;
+}
+
+select.form-input option,
+select option {
+  background: #2a2a3e;
+  color: #ffffff;
+}
+
+/* ガチャコイン表示：カード下のコイン数 */
+.gacha-card-coin {
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  font-weight: 700;
+  text-align: center;
+  margin-top: 6px;
+  letter-spacing: 0.03em;
 }

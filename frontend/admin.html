@@ -141,45 +141,45 @@
           <input type="checkbox" id="pack-is-active" checked style="width: auto;">
           <label for="pack-is-active" class="form-label" style="margin-bottom: 0;">公開中</label>
         </div>
-        <!-- 各賞の排出確率設定（整数%、合計100%になるよう設定） -->
+        <!-- 各賞の口数設定（合計口数を重みとして使用） -->
         <div class="form-group">
-          <label class="form-label">賞別排出確率（整数%）</label>
+          <label class="form-label">賞別口数設定</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: var(--prize-a); font-weight: 700; min-width: 32px;">A賞</span>
-              <input type="number" id="prob-a" class="form-input" placeholder="1" min="0" max="100" style="flex: 1;">
-              <span style="font-size: 0.85rem; color: var(--text-secondary);">%</span>
+              <input type="number" id="prob-a" class="form-input" placeholder="1" min="0" style="flex: 1;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">口</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: var(--prize-b); font-weight: 700; min-width: 32px;">B賞</span>
-              <input type="number" id="prob-b" class="form-input" placeholder="4" min="0" max="100" style="flex: 1;">
-              <span style="font-size: 0.85rem; color: var(--text-secondary);">%</span>
+              <input type="number" id="prob-b" class="form-input" placeholder="4" min="0" style="flex: 1;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">口</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: var(--prize-c); font-weight: 700; min-width: 32px;">C賞</span>
-              <input type="number" id="prob-c" class="form-input" placeholder="15" min="0" max="100" style="flex: 1;">
-              <span style="font-size: 0.85rem; color: var(--text-secondary);">%</span>
+              <input type="number" id="prob-c" class="form-input" placeholder="15" min="0" style="flex: 1;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">口</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: var(--prize-d); font-weight: 700; min-width: 32px;">D賞</span>
-              <input type="number" id="prob-d" class="form-input" placeholder="30" min="0" max="100" style="flex: 1;">
-              <span style="font-size: 0.85rem; color: var(--text-secondary);">%</span>
+              <input type="number" id="prob-d" class="form-input" placeholder="30" min="0" style="flex: 1;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">口</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="color: var(--prize-e); font-weight: 700; min-width: 32px;">E賞</span>
-              <input type="number" id="prob-e" class="form-input" placeholder="50" min="0" max="100" style="flex: 1;">
-              <span style="font-size: 0.85rem; color: var(--text-secondary);">%</span>
+              <input type="number" id="prob-e" class="form-input" placeholder="50" min="0" style="flex: 1;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">口</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px; align-self: end;">
               <span style="font-size: 0.85rem; color: var(--text-secondary);">合計:</span>
-              <span id="prob-total" style="font-weight: 700; color: var(--text-primary);">0%</span>
+              <span id="prob-total" style="font-weight: 700; color: var(--text-primary);">0口</span>
             </div>
           </div>
           <p id="prob-warning" style="color: var(--error); font-size: 0.82rem; margin-top: 6px; display: none;">
-            合計が100%になるよう設定してください（空欄の場合はデフォルト確率を使用）
+            口数を入力してください（空欄の場合はデフォルト口数を使用）
           </p>
           <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">
-            空欄の場合: A賞1% / B賞4% / C賞15% / D賞30% / E賞50%（デフォルト）
+            例: A賞1口 / B賞4口 / C賞15口 / D賞30口 / E賞50口（デフォルト）。口数の比率で確率が決まります。
           </p>
         </div>
 

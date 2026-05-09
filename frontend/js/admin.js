@@ -264,10 +264,10 @@ async function submitPackForm() {
     const pe = parseFloat(probE) || 0;
     const total = pa + pb + pc + pd + pe;
 
-    // 合計が100でなければ警告を表示して処理を止める
-    if (Math.abs(total - 100) > 0.001) {
+    // 口数合計が0以下なら警告（合計100%チェックは不要、口数なのでどんな値でもOK）
+    if (total <= 0) {
       document.getElementById('prob-warning').style.display = 'block';
-      showAlert('admin-alert', `確率の合計が ${total}% です。合計100%になるよう設定してください`, 'error');
+      showAlert('admin-alert', '口数の合計が0です。各賞の口数を入力してください', 'error');
       return;
     }
     document.getElementById('prob-warning').style.display = 'none';
@@ -718,7 +718,7 @@ async function deleteCard(cardId, cardName) {
 
 // ===== ユーティリティ =====
 /**
- * 確率入力欄の合計を計算してリアルタイム表示する
+ * 口数入力欄の合計を計算してリアルタイム表示する
  */
 function updateProbTotal() {
   const ids = ['prob-a', 'prob-b', 'prob-c', 'prob-d', 'prob-e'];
@@ -740,8 +740,9 @@ function updateProbTotal() {
   }
 
   const rounded = Math.round(total * 1000) / 1000;
-  totalEl.textContent = `${rounded}%`;
-  if (Math.abs(rounded - 100) < 0.001) {
+  // 口数合計を表示（%表示から口数表示へ）
+  totalEl.textContent = `${rounded}口`;
+  if (total > 0) {
     totalEl.style.color = 'var(--success, #22c55e)';
     if (warningEl) warningEl.style.display = 'none';
   } else {
