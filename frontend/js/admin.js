@@ -434,7 +434,7 @@ function buildExistingCardRow(card, prizeKey) {
 
   const probEl = document.createElement('span');
   probEl.style.cssText = 'font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;';
-  probEl.textContent = `${(card.probability * 100).toFixed(2)}%`;
+  probEl.textContent = `${card.probability}口`;
 
   // コイン変換レート表示（設定済みの場合のみ表示）
   const coinEl = document.createElement('span');
@@ -613,7 +613,7 @@ async function loadCards() {
     wrap.innerHTML = `
       <table class="admin-table">
         <thead><tr>
-          <th>ID</th><th>パック</th><th>カード名</th><th>レアリティ</th><th>確率</th><th>変換コイン</th><th>操作</th>
+          <th>ID</th><th>パック</th><th>カード名</th><th>レアリティ</th><th>口数</th><th>変換コイン</th><th>操作</th>
         </tr></thead>
         <tbody>
           ${cards.map(c => `
@@ -622,7 +622,7 @@ async function loadCards() {
               <td>${escapeHtml(c.pack_name)}</td>
               <td>${escapeHtml(c.name)}</td>
               <td><span style="color: ${rarityColors[c.rarity] || '#fff'}; font-weight: 700;">${c.rarity}</span></td>
-              <td>${(c.probability * 100).toFixed(2)}%</td>
+              <td>${c.probability}口</td>
               <td style="color: var(--accent-gold, #f9d923);">${c.coin_value != null ? c.coin_value + 'コイン' : '<span style="color:var(--text-secondary)">デフォルト</span>'}</td>
               <td style="display: flex; gap: 4px;">
                 <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;"
@@ -687,7 +687,7 @@ async function submitCardForm() {
   };
 
   if (!body.name || !body.probability) {
-    showAlert('admin-alert', 'カード名と確率は必須です', 'error');
+    showAlert('admin-alert', 'カード名と口数は必須です', 'error');
     return;
   }
 
@@ -751,7 +751,7 @@ function updateProbTotal() {
   }
 }
 
-// 確率入力欄のイベントリスナーをDOMContentLoaded後に登録
+// 口数入力欄のイベントリスナーをDOMContentLoaded後に登録
 document.addEventListener('DOMContentLoaded', () => {
   ['prob-a', 'prob-b', 'prob-c', 'prob-d', 'prob-e'].forEach(id => {
     const el = document.getElementById(id);
