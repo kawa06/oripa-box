@@ -1982,3 +1982,40 @@ select option {
   margin-top: 6px;
   letter-spacing: 0.03em;
 }
+
+/* ===== 画像優先レイアウト（image_urlがある場合のカード表面） ===== */
+
+/* 画像エリアを約80%の高さに拡大 */
+.card-art.card-art-image-priority {
+  height: 80%;
+  margin-bottom: 4px;
+}
+
+/* 画像優先時の下部情報エリアをコンパクトに */
+.card-info.card-info-compact {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+/* 画像優先時のカード名を小さく表示 */
+.card-name.card-name-small {
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+/* 画像優先時のコイン表示をさらに小さく */
+.gacha-card-coin.gacha-card-coin-compact {
+  font-size: 0.7rem;
+  margin-top: 0;
+  letter-spacing: 0;
+}

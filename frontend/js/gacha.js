@@ -750,6 +750,8 @@ function toggleAllResults() {
 
 /**
  * カード表面のHTMLを生成する
+ * image_urlがある場合: 画像をカード面積の約80%に大きく表示し、名前・コインを下部に小さくまとめる
+ * image_urlがない場合: 従来どおり絵文字＋カード名＋説明を表示
  */
 function buildCardFrontHTML(card) {
   // 賞ごとのカラーマッピング
@@ -761,7 +763,7 @@ function buildCardFrontHTML(card) {
     'E賞': '#94a3b8',
   };
 
-  // 賞ごとの絵文字
+  // 賞ごとの絵文字（画像なしの場合に使用）
   const cardEmojis = {
     'A賞': '👑',
     'B賞': '✨',
@@ -773,19 +775,32 @@ function buildCardFrontHTML(card) {
   const color = rarityColors[card.rarity] || '#666';
   const emoji = cardEmojis[card.rarity] || '🃏';
 
-  const artContent = card.image_url
-    ? `<img src="${card.image_url}" alt="${card.name}">`
-    : `<span style="font-size: 5rem;">${emoji}</span>`;
-
   // 変換コイン数の表示（coin_valueがある場合のみ）
   // デフォルト値: E賞=10, D賞=30, C賞=100, B賞=300, A賞=1000
   const defaultCoinValues = { 'A賞': 1000, 'B賞': 300, 'C賞': 100, 'D賞': 30, 'E賞': 10 };
   const coinValue = card.coin_value != null ? card.coin_value : (defaultCoinValues[card.rarity] || 10);
-  const coinHTML = `<p class="gacha-card-coin">🪙 ${coinValue}コイン</p>`;
 
+  if (card.image_url) {
+    // --- 画像優先レイアウト ---
+    // カードイラストを80%の高さで大きく表示し、名前・コインは下部に小さくまとめる
+    return `
+      <div class="card-art card-art-image-priority" style="border: 2px solid ${color}">
+        <img src="${card.image_url}" alt="${card.name}">
+      </div>
+      <div class="card-info card-info-compact">
+        <span class="rarity-badge" style="background: linear-gradient(135deg, ${color}, ${color}88); color: ${card.rarity === 'E賞' ? '#94a3b8' : '#fff'}; border: 1px solid ${color}; font-size: 0.65rem; padding: 2px 8px;">
+          ${card.rarity}
+        </span>
+        <p class="card-name card-name-small" style="color: ${color};">${card.name}</p>
+        <p class="gacha-card-coin gacha-card-coin-compact">🪙 ${coinValue}コイン</p>
+      </div>
+    `;
+  }
+
+  // --- 画像なし: 従来レイアウト ---
   return `
     <div class="card-art" style="border: 2px solid ${color}">
-      ${artContent}
+      <span style="font-size: 5rem;">${emoji}</span>
     </div>
     <div class="card-info">
       <span class="rarity-badge" style="background: linear-gradient(135deg, ${color}, ${color}88); color: ${card.rarity === 'E賞' ? '#94a3b8' : '#fff'}; border: 1px solid ${color};">
@@ -793,7 +808,7 @@ function buildCardFrontHTML(card) {
       </span>
       <p class="card-name" style="color: ${color};">${card.name}</p>
       <p style="font-size: 0.8rem; color: var(--text-secondary);">${card.description || ''}</p>
-      ${coinHTML}
+      <p class="gacha-card-coin">🪙 ${coinValue}コイン</p>
     </div>
   `;
 }
