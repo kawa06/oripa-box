@@ -289,6 +289,8 @@ def seed():
     except Exception as e:
         db.rollback()
         print(f"エラーが発生しました: {e}")
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         db.close()

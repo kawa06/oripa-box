@@ -9,6 +9,7 @@ pip install -r requirements.txt
 
 echo "=== 初期データを投入 ==="
 # seed.py は冪等に作られていること（既存データがあれば何もしない）
-python -m backend.seed
+# PostgreSQL接続失敗時はビルドを止めずに警告だけ出す
+python -m backend.seed || echo "[警告] seed.py の実行に失敗しましたが、ビルドを続行します"
 
 echo "=== ビルド完了 ==="
