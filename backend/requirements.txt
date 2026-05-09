@@ -8,3 +8,5 @@ stripe>=7.0.0
 python-dotenv>=1.0.0
 pydantic[email]>=2.5.0
 bcrypt==4.0.1
+# PostgreSQL接続ドライバ（Render本番環境用）
+psycopg2-binary>=2.9.0

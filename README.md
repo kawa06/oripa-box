@@ -170,6 +170,31 @@ oripa-gacha/
 | `STRIPE_WEBHOOK_SECRET` | Stripe Webhookシークレット | `whsec_...` |
 | `FRONTEND_URL` | デプロイ後のURL（Stripe リダイレクト先） | `https://oripa-gacha.onrender.com` |
 
+> `DATABASE_URL` は `render.yaml` の `fromDatabase` 設定により Render が自動的に注入します。手動設定は不要です。
+
+### PostgreSQL 設定について
+
+`render.yaml` には Render Managed PostgreSQL データベースが含まれています。
+Blueprint デプロイ時に自動的に以下が作成・接続されます。
+
+| 項目 | 値 |
+|------|-----|
+| サービス名 | `oripa-gacha-db` |
+| データベース名 | `oripa_gacha` |
+| ユーザー名 | `oripa_user` |
+| プラン | free |
+
+- Blueprint デプロイ後、`DATABASE_URL` 環境変数に PostgreSQL の接続文字列が自動設定されます
+- アプリ側は `database.py` で `postgres://` → `postgresql://` の自動変換に対応済みです
+- テーブルはアプリ起動時に `Base.metadata.create_all()` で自動作成されます
+- `ALTER TABLE` によるマイグレーションは SQLite 専用です。PostgreSQL では不要（`create_all` が担う）
+
+#### ローカルで PostgreSQL を使う場合
+
+```env
+DATABASE_URL=postgresql://ユーザー名:パスワード@localhost:5432/oripa_gacha
+```
+
 ### SQLite に関する重要な注意事項
 
 > **警告**: Render.com の無料プランは **Ephemeral Filesystem（揮発性ファイルシステム）** を採用しています。  

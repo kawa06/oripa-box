@@ -1926,16 +1926,26 @@ body {
 
 /* ===== selectとoptionのダークテーマ対応 ===== */
 /* ブラウザのselectドロップダウンを暗い背景に統一する */
+/* 住所フォームの都道府県select含む全selectに適用 */
 select.form-input,
 select {
   background-color: #2a2a3e;
   color: #ffffff;
+  /* ブラウザデフォルトのappearanceを維持しつつ背景色を上書き */
+  -webkit-appearance: auto;
+  appearance: auto;
 }
 
 select.form-input option,
 select option {
   background: #2a2a3e;
   color: #ffffff;
+}
+
+/* 住所フォームのselect（都道府県）ダークテーマ補強 */
+#ship-prefecture {
+  background-color: #2a2a3e !important;
+  color: #ffffff !important;
 }
 
 /* ガチャコイン表示：カード下のコイン数 */
