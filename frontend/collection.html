@@ -167,7 +167,13 @@
       box-shadow: 0 16px 48px rgba(0,0,0,0.5);
     ">
       <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 12px; color: var(--accent-gold, #f9d923);">コインに変換</h2>
-      <p id="convert-modal-text" style="color: var(--text-secondary, #a0aec0); font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;"></p>
+      <p id="convert-modal-text" style="color: var(--text-secondary, #a0aec0); font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px;"></p>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <label style="font-size: 0.9rem; color: var(--text-secondary, #a0aec0); white-space: nowrap;">変換枚数 <span style="color: var(--text-muted, #666);">(最大 <span id="convert-max-count">1</span> 枚)</span></label>
+        <input type="number" id="convert-count-input" min="1" value="1"
+          style="width: 80px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color, #3a3a5c); background: var(--bg-secondary, #0f0d1e); color: #fff; font-size: 0.95rem; text-align: center;">
+        <button onclick="document.getElementById('convert-count-input').value=document.getElementById('convert-count-input').max" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">MAX</button>
+      </div>
       <div style="display: flex; gap: 12px;">
         <button onclick="submitConvert()" class="btn btn-primary" style="flex: 1; padding: 12px;">変換する</button>
         <button onclick="closeConvertModal()" class="btn btn-outline" style="flex: 1; padding: 12px;">キャンセル</button>
@@ -227,7 +233,17 @@
       margin: auto;
     ">
       <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 6px;">発送申請</h2>
-      <p id="ship-modal-card-name" style="color: var(--text-secondary, #a0aec0); font-size: 0.9rem; margin-bottom: 20px;"></p>
+      <p id="ship-modal-card-name" style="color: var(--text-secondary, #a0aec0); font-size: 0.9rem; margin-bottom: 12px;"></p>
+
+      <!-- 単体申請時の枚数入力（一括時は非表示） -->
+      <div id="ship-count-wrap" class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label">発送枚数 <span style="color: var(--text-muted, #666); font-size: 0.8rem;">(最大 <span id="ship-max-count">1</span> 枚)</span></label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="number" id="ship-count-input" min="1" value="1"
+            style="width: 80px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color, #3a3a5c); background: var(--bg-secondary, #0f0d1e); color: #fff; font-size: 0.95rem; text-align: center;">
+          <button onclick="document.getElementById('ship-count-input').value=document.getElementById('ship-count-input').max" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">MAX</button>
+        </div>
+      </div>
 
       <div id="ship-modal-alert" class="alert" style="margin-bottom: 12px;"></div>
 

@@ -112,9 +112,18 @@ def convert_to_coins(
             detail="このカードは現在変換できません（発送申請中または発送済み）"
         )
 
+    # count バリデーション（1以上かつ所持枚数以下）
+    convert_count = request.count if request.count >= 1 else 1
+    if convert_count > user_card.count:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"所持枚数（{user_card.count}枚）を超えて変換することはできません"
+        )
+
     # コイン変換レートを取得（カード固有値 → 賞別デフォルト値の順に参照）
     rarity = user_card.card.rarity
-    coins = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
+    coin_per_card = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
+    coins = coin_per_card * convert_count
 
     # コインを付与
     current_user.coin_balance += coins
@@ -124,20 +133,19 @@ def convert_to_coins(
         user_id=current_user.id,
         amount=coins,
         transaction_type="card_convert",
-        description=f"{user_card.card.name}（{rarity}）をコインに変換"
+        description=f"{user_card.card.name}（{rarity}）{convert_count}枚をコインに変換"
     ))
 
-    # 枚数が1枚の場合はレコード削除、複数の場合は枚数を減らす
-    if user_card.count <= 1:
+    # 枚数を減らす（0になったらレコード削除）
+    user_card.count -= convert_count
+    if user_card.count <= 0:
         db.delete(user_card)
-    else:
-        user_card.count -= 1
 
     db.commit()
     db.refresh(current_user)
 
     return {
-        "message": f"{user_card.card.name} を {coins} コインに変換しました",
+        "message": f"{user_card.card.name} {convert_count}枚を {coins} コインに変換しました",
         "coins_received": coins,
         "new_balance": current_user.coin_balance
     }
@@ -248,7 +256,7 @@ def convert_bulk_to_coins(
     converted = []
     skipped = []
 
-    for card_id in request.card_ids:
+    for idx, card_id in enumerate(request.card_ids):
         user_card = db.query(models.UserCard).filter(
             models.UserCard.id == card_id,
             models.UserCard.user_id == current_user.id
@@ -264,9 +272,17 @@ def convert_bulk_to_coins(
             skipped.append(card_id)
             continue
 
+        # 変換枚数の決定（counts 指定があればその値、なければ全枚数）
+        if request.counts and idx < len(request.counts):
+            convert_count = max(1, request.counts[idx])
+            convert_count = min(convert_count, user_card.count)
+        else:
+            convert_count = user_card.count
+
         # コイン変換レートを取得
         rarity = user_card.card.rarity
-        coins = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
+        coin_per_card = user_card.card.coin_value if user_card.card.coin_value is not None else COIN_RATES.get(rarity, 10)
+        coins = coin_per_card * convert_count
 
         # コインを付与
         current_user.coin_balance += coins
@@ -277,15 +293,14 @@ def convert_bulk_to_coins(
             user_id=current_user.id,
             amount=coins,
             transaction_type="card_convert",
-            description=f"{user_card.card.name}（{rarity}）をコインに変換"
+            description=f"{user_card.card.name}（{rarity}）{convert_count}枚をコインに変換"
         ))
 
-        # 枚数を減らす（1枚なら削除、複数なら-1）
+        # 枚数を減らす（0になったらレコード削除）
         converted.append(user_card.card.name)
-        if user_card.count <= 1:
+        user_card.count -= convert_count
+        if user_card.count <= 0:
             db.delete(user_card)
-        else:
-            user_card.count -= 1
 
     db.commit()
     db.refresh(current_user)
@@ -398,23 +413,37 @@ def request_shipping(
     if not address:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="住所が見つかりません")
 
-    # 発送申請を作成
-    shipping_req = models.ShippingRequest(
-        user_id=current_user.id,
-        user_card_id=request.user_card_id,
-        address_id=request.address_id,
-        status="pending"
-    )
-    db.add(shipping_req)
+    # count バリデーション
+    ship_count = request.count if request.count >= 1 else 1
+    if ship_count > user_card.count:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"所持枚数（{user_card.count}枚）を超えて発送申請することはできません"
+        )
 
-    # カードのステータスを「発送申請中」に変更
-    user_card.status = "shipping_requested"
+    # 発送申請を count 分作成
+    for _ in range(ship_count):
+        shipping_req = models.ShippingRequest(
+            user_id=current_user.id,
+            user_card_id=request.user_card_id,
+            address_id=request.address_id,
+            status="pending"
+        )
+        db.add(shipping_req)
+
+    # 申請分の枚数を減らす。全枚数申請なら status を変更
+    user_card.count -= ship_count
+    if user_card.count <= 0:
+        user_card.count = 0
+        user_card.status = "shipping_requested"
+    # 一部申請の場合は残り枚数分は owned のまま
+    # （管理上、全枚数申請済みの場合のみステータス変更）
 
     db.commit()
     db.refresh(shipping_req)
 
     return {
-        "message": f"{user_card.card.name} の発送申請を受け付けました",
+        "message": f"{user_card.card.name} {ship_count}枚の発送申請を受け付けました",
         "shipping_request_id": shipping_req.id,
         "status": "pending"
     }

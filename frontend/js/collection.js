@@ -171,12 +171,12 @@ function buildCollectionCard(card) {
         <button
           class="btn btn-primary"
           style="flex: 1; padding: 6px 4px; font-size: 0.75rem;"
-          onclick="openConvertModal(${card.id}, '${escapeHtml(card.card_name)}', '${card.card_rarity}', ${card.coin_value})"
+          onclick="openConvertModal(${card.id}, '${escapeHtml(card.card_name)}', '${card.card_rarity}', ${card.coin_value}, ${card.count})"
         >コイン変換</button>
         <button
           class="btn btn-outline"
           style="flex: 1; padding: 6px 4px; font-size: 0.75rem;"
-          onclick="openShipModal(${card.id}, '${escapeHtml(card.card_name)}', '${card.card_rarity}')"
+          onclick="openShipModal(${card.id}, '${escapeHtml(card.card_name)}', '${card.card_rarity}', ${card.count})"
         >発送申請</button>
       </div>
     `;
@@ -279,10 +279,17 @@ function updateSelectedCount() {
 }
 
 // ===== コイン変換モーダル（単体） =====
-function openConvertModal(cardId, cardName, rarity, coinValue) {
+function openConvertModal(cardId, cardName, rarity, coinValue, maxCount) {
   pendingConvertCardId = cardId;
+  const countInput = document.getElementById('convert-count-input');
+  if (countInput) {
+    countInput.max = maxCount || 1;
+    countInput.value = maxCount || 1;
+  }
+  const maxEl = document.getElementById('convert-max-count');
+  if (maxEl) maxEl.textContent = maxCount || 1;
   document.getElementById('convert-modal-text').textContent =
-    `「${cardName}（${rarity}）」を ${coinValue} コインに変換しますか？この操作は取り消せません。`;
+    `「${cardName}（${rarity}）」を ${coinValue} コイン×枚数分に変換します。この操作は取り消せません。`;
   document.getElementById('convert-modal').style.display = 'flex';
 }
 
@@ -294,10 +301,12 @@ function closeConvertModal() {
 async function submitConvert() {
   if (!pendingConvertCardId) return;
   const cardId = pendingConvertCardId;
+  const countInput = document.getElementById('convert-count-input');
+  const count = countInput ? Math.max(1, parseInt(countInput.value, 10) || 1) : 1;
   closeConvertModal();
 
   try {
-    const res = await apiPost('/collection/convert', { user_card_id: cardId });
+    const res = await apiPost('/collection/convert', { user_card_id: cardId, count });
     // コイン残高を更新してナビバーに反映
     const user = getUser();
     if (user) {
@@ -376,10 +385,19 @@ async function submitBulkConvert() {
 // ===== 発送申請モーダル（単体・一括共用） =====
 
 /** 単体の発送申請を開く */
-async function openShipModal(cardId, cardName, rarity) {
+async function openShipModal(cardId, cardName, rarity, maxCount) {
   bulkShipMode = false;
   pendingShipCardId = cardId;
   document.getElementById('ship-modal-card-name').textContent = `対象カード: ${cardName}（${rarity}）`;
+  const shipCountWrap = document.getElementById('ship-count-wrap');
+  if (shipCountWrap) shipCountWrap.style.display = '';
+  const countInput = document.getElementById('ship-count-input');
+  if (countInput) {
+    countInput.max = maxCount || 1;
+    countInput.value = maxCount || 1;
+  }
+  const maxEl = document.getElementById('ship-max-count');
+  if (maxEl) maxEl.textContent = maxCount || 1;
   await _prepareShipModal();
 }
 
@@ -392,6 +410,8 @@ async function bulkShipSelected() {
   bulkShipMode = true;
   pendingShipCardId = Array.from(selectedCardIds);
   document.getElementById('ship-modal-card-name').textContent = `${pendingShipCardId.length}枚のカードを発送申請します`;
+  const shipCountWrap = document.getElementById('ship-count-wrap');
+  if (shipCountWrap) shipCountWrap.style.display = 'none';
   await _prepareShipModal();
 }
 
@@ -405,6 +425,8 @@ async function bulkShipAll() {
   bulkShipMode = true;
   pendingShipCardId = ids;
   document.getElementById('ship-modal-card-name').textContent = `${ids.length}枚のカードを一括発送申請します`;
+  const shipCountWrap = document.getElementById('ship-count-wrap');
+  if (shipCountWrap) shipCountWrap.style.display = 'none';
   await _prepareShipModal();
 }
 
@@ -472,10 +494,13 @@ async function submitShipRequest() {
       closeShipModal();
       alert(res.message);
     } else {
-      // 単体発送申請
+      // 単体発送申請（count 指定あり）
+      const countInput = document.getElementById('ship-count-input');
+      const count = countInput ? Math.max(1, parseInt(countInput.value, 10) || 1) : 1;
       const res = await apiPost('/collection/ship', {
         user_card_id: pendingShipCardId,
-        address_id: savedAddr.id
+        address_id: savedAddr.id,
+        count
       });
       closeShipModal();
       alert(res.message);

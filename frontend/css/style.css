@@ -2019,3 +2019,15 @@ select option {
   margin-top: 0;
   letter-spacing: 0;
 }
+
+/* ===== Renderバッジ非表示 ===== */
+[data-render-badge], .render-badge, #render-badge,
+iframe[src*=render.com], a[href*=render.com][style] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+}

@@ -308,6 +308,7 @@ class ShippingRequestCreate(BaseModel):
     """発送申請リクエスト"""
     user_card_id: int    # 発送するカードのユーザーカードID
     address_id: int      # 発送先住所ID
+    count: int = 1       # 発送する枚数（デフォルト1）
 
 
 class ShippingRequestResponse(BaseModel):
@@ -339,6 +340,7 @@ class ShippingRequestResponse(BaseModel):
 class ConvertToCoinsRequest(BaseModel):
     """カードをコインに変換するリクエスト"""
     user_card_id: int    # 変換するカードのユーザーカードID
+    count: int = 1       # 変換する枚数（デフォルト1）
 
 
 class ShippingStatusUpdate(BaseModel):
@@ -350,7 +352,8 @@ class ShippingStatusUpdate(BaseModel):
 
 class BulkConvertRequest(BaseModel):
     """複数カードを一括コイン変換するリクエスト"""
-    card_ids: List[int]  # 変換するユーザーカードIDの配列
+    card_ids: List[int]                  # 変換するユーザーカードIDの配列
+    counts: Optional[List[int]] = None   # 各カードの変換枚数（未指定時は全枚数変換）
 
 
 class BulkShipRequest(BaseModel):
