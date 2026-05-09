@@ -1693,9 +1693,14 @@ body {
   flex-direction: column;
   /* 横方向も中央寄せを明示（flex-direction:column で align-items が横軸になる） */
   align-items: center;
+  /* 上端基準にして overflow-y でスクロール可能にする（PC・スマホ両対応） */
+  justify-content: flex-start;
   gap: 0;
   overflow-y: auto;
-  padding: 24px 16px;
+  /* スクロールバー領域を確保しつつ上下に余白を設ける */
+  padding: 20px 16px 32px;
+  /* コンテンツが画面に収まらない場合でも全カードにアクセスできるよう設定 */
+  box-sizing: border-box;
 }
 
 /* まとめ引きヘッダー（タイトル + コスト表示） */
@@ -1796,6 +1801,26 @@ body {
 
   .hundred-stage-inner {
     max-width: 100%;
+  }
+}
+
+/* PC: 10連カードを縮小して5×2行が画面内に収まるように調整 */
+@media (min-width: 601px) {
+  /* 10連グリッドのカードサイズを縮小（5列×2行 = 10枚がビューポート内に収まる想定） */
+  .multi-cards-grid .card-flip-container {
+    width: 100px !important;
+    height: 140px !important;
+    min-width: 100px;
+  }
+
+  .multi-card-slot {
+    width: 100px;
+    height: 140px;
+  }
+
+  /* グリッド最大幅をカードサイズ・gap に合わせて調整（5枚×108px = 540px + 余白） */
+  .multi-cards-grid {
+    max-width: 600px;
   }
 }
 
