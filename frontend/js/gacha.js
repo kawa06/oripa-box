@@ -588,16 +588,20 @@ function showMultiGachaAnimation100(result) {
     `
     : '<p style="color: var(--text-secondary); font-size: 0.9rem;">今回はレアカードなし</p>';
 
-  // 全結果一覧HTML（小サムネ）
+  // 全結果一覧HTML（小サムネ + 画像）
   const allCardsHTML = result.cards.map(r => r.card).map(card => `
     <div style="
       padding: 4px 8px;
       background: rgba(255,255,255,0.03);
       border-radius: 6px;
       border-left: 2px solid ${rarityColors[card.rarity] || '#555'};
-      display:flex; align-items:center; gap:6px;
+      display:flex; align-items:center; gap:8px;
       font-size: 0.8rem;
     ">
+      ${card.image_url
+        ? `<img src="${card.image_url}" alt="${card.name}" style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid ${rarityColors[card.rarity] || '#555'}; flex-shrink:0;">`
+        : `<span style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">🃏</span>`
+      }
       <span style="color:${rarityColors[card.rarity] || '#555'}; font-weight:700; min-width:32px;">${card.rarity}</span>
       <span style="color: var(--text-primary);">${card.name}</span>
     </div>
