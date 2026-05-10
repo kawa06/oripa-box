@@ -43,8 +43,8 @@ class Pack(Base):
     name = Column(String, nullable=False)  # パック名
     description = Column(Text)  # パック説明
     price_coins = Column(Integer, nullable=False)  # ガチャに必要なコイン数
-    stock = Column(Integer, default=100, nullable=False)  # 在庫数（最大100口）
-    max_stock = Column(Integer, default=100, nullable=False)  # 最大在庫数
+    stock = Column(Integer, default=100, nullable=False)  # 在庫数（最大100000口）
+    max_stock = Column(Integer, default=100, nullable=False)  # 最大在庫数（最大100000口）
     image_url = Column(String)  # パック画像URL
     is_active = Column(Boolean, default=True)  # 販売中フラグ
     # 各賞の排出確率設定（JSON文字列: {"A賞":5,"B賞":10,"C賞":20,"D賞":30,"E賞":35} のように整数%で指定）
