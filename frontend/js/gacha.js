@@ -145,7 +145,7 @@ function showPackDetail(pack) {
 
   // 賞セクション生成
   const prizesContainer = document.getElementById('pack-detail-prizes');
-  prizesContainer.innerHTML = buildDetailPrizeSections(pack.cards || []);
+  prizesContainer.innerHTML = buildDetailPrizeSections(pack.cards || [], pack.max_stock);
 
   // 価格・在庫情報
   document.getElementById('pack-detail-price').textContent = `🪙 ${pack.price_coins}コイン`;
@@ -169,8 +169,9 @@ function showPackDetail(pack) {
 /**
  * 賞ごとの詳細セクションHTMLを生成する
  * @param {Array} cards - パックのカードリスト
+ * @param {number} maxStock - パックの最大在庫数（枚数計算用）
  */
-function buildDetailPrizeSections(cards) {
+function buildDetailPrizeSections(cards, maxStock) {
   if (!cards || cards.length === 0) return '<p class="text-secondary text-center" style="padding:24px;">カード情報がありません</p>';
 
   const prizeColors = {
@@ -189,9 +190,6 @@ function buildDetailPrizeSections(cards) {
     if (prizeMap[card.rarity]) prizeMap[card.rarity].push(card);
   }
 
-  // カード枚数の合計（確率計算用）
-  const totalCards = cards.length;
-
   return prizeOrder
     .filter(prize => prizeMap[prize].length > 0)
     .map(prize => {
@@ -199,9 +197,9 @@ function buildDetailPrizeSections(cards) {
       const color = prizeColors[prize] || '#666';
 
       const cardGridHTML = prizeCards.map(card => {
-        // probability を % 表示（floatなのでそのまま * 100）
-        const probPercent = card.probability != null
-          ? (card.probability * 100).toFixed(2)
+        // 枚数表示: Math.round(probability * max_stock)
+        const cardCount = (card.probability != null && maxStock != null)
+          ? Math.round(card.probability * maxStock)
           : null;
 
         const imgHTML = card.image_url
@@ -222,7 +220,7 @@ function buildDetailPrizeSections(cards) {
               ${countBadge}
             </div>
             <p class="detail-card-name">${card.name}</p>
-            ${probPercent != null ? `<p class="detail-card-prob">${probPercent}%</p>` : ''}
+            ${cardCount != null ? `<p class="detail-card-prob">${cardCount}枚</p>` : ''}
           </div>
         `;
       }).join('');
