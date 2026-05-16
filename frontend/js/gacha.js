@@ -24,6 +24,8 @@
 let selectedPackId = null;
 // 選択中のパック価格（コイン）
 let selectedPackPrice = 0;
+// 全パックデータキャッシュ
+let allPacksCache = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 認証チェック
@@ -37,9 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (gachaBtn) {
     gachaBtn.addEventListener('click', () => executeGacha(1));
   }
-
-  // ガチャ履歴を読み込む
-  await loadGachaHistory();
 });
 
 /**
@@ -51,6 +50,7 @@ async function loadPacks() {
 
   try {
     const packs = await apiGet('/packs/');
+    allPacksCache = packs;
 
     if (packs.length === 0) {
       container.innerHTML = '<p class="text-secondary text-center">現在利用可能なパックはありません</p>';
@@ -98,7 +98,7 @@ async function loadPacks() {
           <div class="pack-footer">
             <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
             ${pack.stock > 0
-              ? `<button class="btn btn-primary" onclick="selectPack(${pack.id}, this.closest('.pack-card')); event.stopPropagation();">選択</button>`
+              ? `<button class="btn btn-primary" onclick="selectPack(${pack.id}, this.closest('.pack-card')); event.stopPropagation();">詳細を見る</button>`
               : `<button class="btn btn-outline" disabled>売り切れ</button>`
             }
           </div>
@@ -112,7 +112,137 @@ async function loadPacks() {
 }
 
 /**
- * 賞別カードプレビューHTMLを生成する（index.htmlと共通ロジック）
+ * パック一覧に戻る
+ */
+function showPackList() {
+  document.getElementById('pack-list-section').classList.remove('hidden');
+  document.getElementById('pack-detail-section').classList.add('hidden');
+  selectedPackId = null;
+  selectedPackPrice = 0;
+}
+
+/**
+ * パック詳細ページを表示する
+ * @param {Object} pack - パックデータ
+ */
+function showPackDetail(pack) {
+  // パック一覧を隠して詳細を表示
+  document.getElementById('pack-list-section').classList.add('hidden');
+  document.getElementById('pack-detail-section').classList.remove('hidden');
+
+  // バナー画像
+  const bannerWrap = document.getElementById('pack-banner-img-wrap');
+  if (pack.image_url) {
+    bannerWrap.innerHTML = `<img src="${pack.image_url}" alt="${pack.name}" class="pack-banner-img">`;
+    bannerWrap.style.background = '';
+  } else {
+    bannerWrap.innerHTML = `<span class="pack-banner-emoji">${getPackEmoji(pack.name)}</span>`;
+    bannerWrap.style.background = 'linear-gradient(135deg, #1a1a4a, #2a1a5a, #1a2a4a)';
+  }
+
+  // パック名
+  document.getElementById('pack-detail-name').textContent = pack.name;
+
+  // 賞セクション生成
+  const prizesContainer = document.getElementById('pack-detail-prizes');
+  prizesContainer.innerHTML = buildDetailPrizeSections(pack.cards || []);
+
+  // 価格・在庫情報
+  document.getElementById('pack-detail-price').textContent = `🪙 ${pack.price_coins}コイン`;
+  const stockPercent = (pack.stock / pack.max_stock) * 100;
+  const isLow = stockPercent < 20;
+  document.getElementById('pack-detail-stock').textContent =
+    `在庫: ${pack.stock} / ${pack.max_stock}口${isLow ? ' ⚠️ 残りわずか' : ''}`;
+  const fillEl = document.getElementById('pack-detail-stock-fill');
+  if (fillEl) {
+    fillEl.style.width = `${stockPercent}%`;
+    fillEl.className = `stock-bar-fill ${isLow ? 'low' : ''}`;
+  }
+
+  // ガチャ履歴を読み込む
+  loadGachaHistory();
+
+  // ページ先頭にスクロール
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * 賞ごとの詳細セクションHTMLを生成する
+ * @param {Array} cards - パックのカードリスト
+ */
+function buildDetailPrizeSections(cards) {
+  if (!cards || cards.length === 0) return '<p class="text-secondary text-center" style="padding:24px;">カード情報がありません</p>';
+
+  const prizeColors = {
+    'A賞': '#ffd700',
+    'B賞': '#e879f9',
+    'C賞': '#a78bfa',
+    'D賞': '#38bdf8',
+    'E賞': '#94a3b8',
+  };
+  const prizeOrder = ['A賞', 'B賞', 'C賞', 'D賞', 'E賞'];
+
+  // 各賞のカードをグループ化
+  const prizeMap = {};
+  prizeOrder.forEach(p => { prizeMap[p] = []; });
+  for (const card of cards) {
+    if (prizeMap[card.rarity]) prizeMap[card.rarity].push(card);
+  }
+
+  // カード枚数の合計（確率計算用）
+  const totalCards = cards.length;
+
+  return prizeOrder
+    .filter(prize => prizeMap[prize].length > 0)
+    .map(prize => {
+      const prizeCards = prizeMap[prize];
+      const color = prizeColors[prize] || '#666';
+
+      const cardGridHTML = prizeCards.map(card => {
+        // probability を % 表示（floatなのでそのまま * 100）
+        const probPercent = card.probability != null
+          ? (card.probability * 100).toFixed(2)
+          : null;
+
+        const imgHTML = card.image_url
+          ? `<img src="${card.image_url}" alt="${card.name}" class="detail-card-img">`
+          : `<div class="detail-card-placeholder" style="border-color: ${color}88; background: ${color}11;">
+               <span style="font-size: 1.5rem;">${prize[0]}</span>
+             </div>`;
+
+        // 所持数バッジ（count があれば）
+        const countBadge = (card.count != null && card.count > 1)
+          ? `<span class="detail-card-count-badge">x${card.count}</span>`
+          : '';
+
+        return `
+          <div class="detail-card-item">
+            <div class="detail-card-img-wrap" style="border-color: ${color};">
+              ${imgHTML}
+              ${countBadge}
+            </div>
+            <p class="detail-card-name">${card.name}</p>
+            ${probPercent != null ? `<p class="detail-card-prob">${probPercent}%</p>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="detail-prize-section">
+          <div class="detail-prize-header" style="border-left-color: ${color};">
+            <span class="detail-prize-label" style="color: ${color};">${prize}</span>
+            <span class="detail-prize-count" style="color: ${color};">${prizeCards.length}種</span>
+          </div>
+          <div class="detail-card-grid">
+            ${cardGridHTML}
+          </div>
+        </div>
+      `;
+    }).join('');
+}
+
+/**
+ * 賞別カードプレビューHTMLを生成する（パック一覧カード用）
  * @param {Array} cards - パックのカードリスト
  */
 function buildPrizePreview(cards) {
@@ -179,24 +309,14 @@ function getPackEmoji(name) {
  * パックを選択する
  */
 function selectPack(packId, cardEl) {
-  // 前の選択を解除
-  document.querySelectorAll('.pack-card.selected').forEach(el => {
-    el.classList.remove('selected');
-    el.style.borderColor = '';
-  });
-
   // 新しいパックを選択
   selectedPackId = packId;
-  const targetCard = cardEl.closest ? cardEl.closest('.pack-card') : cardEl;
-  if (targetCard) {
-    targetCard.style.borderColor = 'var(--accent-purple)';
-    targetCard.classList.add('selected');
-  }
 
-  // パックデータ取得
-  const packData = document.querySelector(`.pack-card[data-pack-id="${packId}"]`);
-  selectedPackPrice = packData ? parseInt(packData.dataset.price, 10) : 0;
-  const stock = packData ? parseInt(packData.dataset.stock, 10) : 0;
+  // パックデータ取得（DOM または キャッシュから）
+  const packDomEl = document.querySelector(`.pack-card[data-pack-id="${packId}"]`);
+  selectedPackPrice = packDomEl ? parseInt(packDomEl.dataset.price, 10) : 0;
+  const stock = packDomEl ? parseInt(packDomEl.dataset.stock, 10) : 0;
+  const maxStock = packDomEl ? parseInt(packDomEl.dataset.maxStock, 10) : 100;
 
   // コイン残高取得
   const user = getUser();
@@ -215,13 +335,6 @@ function selectPack(packId, cardEl) {
       gachaBtn.disabled = false;
       gachaBtn.innerHTML = `🎲 1回引く（${selectedPackPrice}コイン）`;
     }
-  }
-
-  // ===== まとめ引きボタンエリアを表示 =====
-  const multiArea = document.getElementById('multi-draw-btns');
-  if (multiArea) {
-    multiArea.style.display = 'flex';
-    multiArea.classList.remove('hidden');
   }
 
   // 10回引きボタンを更新
@@ -254,12 +367,10 @@ function selectPack(packId, cardEl) {
     }
   }
 
-  // 選択パック名を表示
-  const selectedName = document.querySelector(`.pack-card[data-pack-id="${packId}"] .pack-name`)?.textContent;
-  const selectedInfo = document.getElementById('selected-pack-info');
-  if (selectedInfo && selectedName) {
-    selectedInfo.textContent = `選択中: ${selectedName}`;
-    selectedInfo.classList.remove('hidden');
+  // キャッシュからパックデータを取得して詳細表示
+  const packData = allPacksCache.find(p => p.id === packId);
+  if (packData) {
+    showPackDetail(packData);
   }
 }
 
@@ -365,34 +476,54 @@ function updateCoinBalance(newBalance) {
  * パックの在庫表示を更新する
  */
 function updatePackStock(packId, newStock) {
+  // パック一覧カードのDOM更新
   const packCard = document.querySelector(`.pack-card[data-pack-id="${packId}"]`);
-  if (!packCard) return;
+  if (packCard) {
+    const maxStock = parseInt(packCard.dataset.maxStock, 10) || 100;
+    packCard.dataset.stock = newStock;
 
-  const maxStock = parseInt(packCard.dataset.maxStock, 10) || 100;
-  packCard.dataset.stock = newStock;
+    const fillEl = packCard.querySelector('.stock-bar-fill');
+    const labelEl = packCard.querySelector('.stock-bar-label span:last-child');
 
-  const fillEl = packCard.querySelector('.stock-bar-fill');
-  const labelEl = packCard.querySelector('.stock-bar-label span:last-child');
+    if (fillEl) {
+      const percent = (newStock / maxStock) * 100;
+      fillEl.style.width = `${percent}%`;
+      fillEl.className = `stock-bar-fill ${percent < 20 ? 'low' : ''}`;
+    }
+    if (labelEl) {
+      labelEl.textContent = `${newStock} / ${maxStock}口`;
+    }
 
-  if (fillEl) {
+    if (newStock <= 0) {
+      const imgArea = packCard.querySelector('.pack-image');
+      if (imgArea && !imgArea.querySelector('.badge-soldout')) {
+        const badge = document.createElement('span');
+        badge.className = 'badge-soldout';
+        badge.textContent = 'SOLD OUT';
+        imgArea.appendChild(badge);
+      }
+    }
+  }
+
+  // 詳細ページの在庫バー更新
+  const detailFill = document.getElementById('pack-detail-stock-fill');
+  const detailStockLabel = document.getElementById('pack-detail-stock');
+  if (detailFill && packCard) {
+    const maxStock = parseInt(packCard.dataset.maxStock, 10) || 100;
     const percent = (newStock / maxStock) * 100;
-    fillEl.style.width = `${percent}%`;
-    fillEl.className = `stock-bar-fill ${percent < 20 ? 'low' : ''}`;
+    detailFill.style.width = `${percent}%`;
+    detailFill.className = `stock-bar-fill ${percent < 20 ? 'low' : ''}`;
+    if (detailStockLabel) {
+      detailStockLabel.textContent = `在庫: ${newStock} / ${maxStock}口${percent < 20 ? ' ⚠️ 残りわずか' : ''}`;
+    }
   }
-  if (labelEl) {
-    labelEl.textContent = `${newStock} / ${maxStock}口`;
-  }
+
+  // キャッシュ更新
+  const cached = allPacksCache.find(p => p.id === packId);
+  if (cached) cached.stock = newStock;
 
   // 在庫ゼロになったら売り切れ表示
   if (newStock <= 0) {
-    const imgArea = packCard.querySelector('.pack-image');
-    if (imgArea && !imgArea.querySelector('.badge-soldout')) {
-      const badge = document.createElement('span');
-      badge.className = 'badge-soldout';
-      badge.textContent = 'SOLD OUT';
-      imgArea.appendChild(badge);
-    }
-    // すべてのボタンを無効化
     const gachaBtn = document.getElementById('gacha-btn');
     if (gachaBtn) {
       gachaBtn.disabled = true;
@@ -750,7 +881,7 @@ function toggleAllResults() {
 
 /**
  * カード表面のHTMLを生成する
- * image_urlがある場合: 画像をカード面積の約80%に大きく表示し、名前・コインを下部に小さくまとめる
+ * image_urlがある場合: 画像をカード面積の約80%に大きく表示し、名前・コインは下部に小さくまとめる
  * image_urlがない場合: 従来どおり絵文字＋カード名＋説明を表示
  */
 function buildCardFrontHTML(card) {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -40,28 +40,50 @@
     </div>
 
     <!-- アラート -->
-    <div id="gacha-alert" class="alert" style="max-width: 600px; margin: 0 auto 24px;"></div>
+    <div id="gacha-alert" class="alert" style="max-width: 800px; margin: 0 auto 24px;"></div>
 
-    <div class="gacha-area">
-      <!-- パック選択エリア -->
-      <section style="width: 100%;">
-        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary);">
-          1. パックを選択
-        </h2>
-        <div id="pack-selector-area" class="pack-grid">
-          <div class="flex-center" style="grid-column: 1 / -1; padding: 40px;">
-            <div class="spinner"></div>
-          </div>
+    <!-- パック選択グリッド（初期表示） -->
+    <section id="pack-list-section">
+      <div id="pack-selector-area" class="pack-grid">
+        <div class="flex-center" style="grid-column: 1 / -1; padding: 40px;">
+          <div class="spinner"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- ガチャ実行エリア -->
-      <section style="width: 100%; max-width: 480px;">
-        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary); text-align: center;">
-          2. ガチャを引く
-        </h2>
-        <div class="gacha-action">
-          <p id="selected-pack-info" class="hidden" style="color: var(--accent-gold); font-weight: 600;"></p>
+    <!-- パック詳細ページ（パック選択後に表示） -->
+    <section id="pack-detail-section" class="hidden">
+      <div class="pack-detail-layout">
+
+        <!-- 上部: バナー画像 -->
+        <div class="pack-detail-banner" id="pack-detail-banner">
+          <div id="pack-banner-img-wrap" class="pack-banner-img-wrap">
+            <!-- JSで画像 or グラデーション背景を挿入 -->
+          </div>
+          <div class="pack-banner-overlay">
+            <h2 id="pack-detail-name" class="pack-detail-name"></h2>
+          </div>
+          <!-- 戻るボタン -->
+          <button class="pack-detail-back-btn" onclick="showPackList()">← 一覧に戻る</button>
+        </div>
+
+        <!-- 中部: 賞ごとのカード一覧 -->
+        <div class="pack-detail-prizes" id="pack-detail-prizes">
+          <!-- JSで賞セクションを生成 -->
+        </div>
+
+        <!-- 下部: ガチャ実行ボタン -->
+        <div class="pack-detail-actions" id="pack-detail-actions">
+          <div class="pack-detail-meta">
+            <span id="pack-detail-price" class="price-tag"></span>
+            <span id="pack-detail-stock" class="pack-detail-stock-label"></span>
+          </div>
+          <div class="pack-detail-stock-bar">
+            <div class="stock-bar-track">
+              <div class="stock-bar-fill" id="pack-detail-stock-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <p id="gacha-detail-alert" style="display:none; color: var(--error); font-size: 0.9rem; text-align:center;"></p>
 
           <!-- 1回引きボタン -->
           <button
@@ -74,8 +96,8 @@
             パックを選択してください
           </button>
 
-          <!-- 10回引き / 100回引きボタン（パック選択後に表示） -->
-          <div id="multi-draw-btns" class="hidden" style="display: none; width: 100%; gap: 12px; flex-direction: column; margin-top: 8px;">
+          <!-- 10回引き / 100回引きボタン -->
+          <div id="multi-draw-btns" style="display: flex; width: 100%; gap: 12px; flex-direction: column; margin-top: 8px;">
             <button
               id="gacha-btn-10"
               class="btn btn-primary btn-lg"
@@ -103,10 +125,11 @@
             コインが不足していますか？ →購入する
           </a>
         </div>
-      </section>
+
+      </div><!-- /.pack-detail-layout -->
 
       <!-- ガチャ履歴 -->
-      <section style="width: 100%;">
+      <section style="width: 100%; max-width: 800px; margin: 40px auto 0;">
         <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary);">
           最近の結果
         </h2>
@@ -116,7 +139,7 @@
           </div>
         </div>
       </section>
-    </div>
+    </section>
   </div>
 
   <!-- ガチャ開封ステージ（全画面オーバーレイ） -->
@@ -141,7 +164,6 @@
           if (packCard) {
             clearInterval(checkInterval);
             selectPack(parseInt(packId), packCard);
-            packCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             // autocountが指定されている場合は自動でガチャを実行する
             if (autoCount) {
