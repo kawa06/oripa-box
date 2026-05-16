@@ -544,6 +544,7 @@ function updatePackStock(packId, newStock) {
 function showGachaAnimation(result) {
   const card = result.card;
   const rarity = card.rarity;
+  const userCardId = result.user_card_id || null;
   const stage = document.getElementById('gacha-stage');
 
   if (!stage) return;
@@ -559,7 +560,7 @@ function showGachaAnimation(result) {
   }
 
   // カード表面のHTMLを構築
-  const cardFrontHTML = buildCardFrontHTML(card);
+  const cardFrontHTML = buildCardFrontHTML(card, userCardId);
   const particlesHTML = buildParticlesHTML(rarity);
 
   const rarityClass = `rarity-${rarity}`;
@@ -646,6 +647,7 @@ function showMultiGachaAnimation10(result) {
   if (!stage) return;
 
   const cards = result.cards.map(r => r.card);
+  const userCardIds = result.cards.map(r => r.user_card_id || null);
   stage.className = 'gacha-stage gacha-stage-multi';
 
   stage.innerHTML = `
@@ -661,7 +663,7 @@ function showMultiGachaAnimation10(result) {
             <div class="card-flip-inner">
               <div class="card-face card-back"></div>
               <div class="card-face card-front">
-                ${buildCardFrontHTML(card)}
+                ${buildCardFrontHTML(card, userCardIds[i])}
               </div>
             </div>
           </div>
@@ -673,6 +675,9 @@ function showMultiGachaAnimation10(result) {
       <button class="stage-close show" id="stage-close-btn" onclick="closeGachaStage()" style="display:none; position:static; width:auto; height:auto; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem;">
         閉じる
       </button>
+      <a href="/frontend/collection.html" id="multi-collection-link" style="display:none; padding: 10px 20px; font-size: 0.85rem; color: var(--accent-gold); text-decoration: none; border: 1px solid var(--accent-gold); border-radius: 8px;">
+        コレクションで変換・発送申請
+      </a>
     </div>
   `;
 
@@ -688,12 +693,14 @@ function showMultiGachaAnimation10(result) {
       if (!flipContainer.classList.contains('flipped')) {
         flipCard(flipContainer, rarity);
         flippedCount++;
-        // すべてフリップしたら閉じるボタンを表示
+        // すべてフリップしたら閉じるボタンとコレクションリンクを表示
         if (flippedCount >= cards.length) {
           const hint = document.getElementById('flip-hint-multi');
           if (hint) hint.style.display = 'none';
           const closeBtn = document.getElementById('stage-close-btn');
           if (closeBtn) closeBtn.style.display = 'flex';
+          const collectionLink = document.getElementById('multi-collection-link');
+          if (collectionLink) collectionLink.style.display = 'inline-block';
         }
       }
     });
@@ -721,6 +728,8 @@ function showMultiGachaAnimation10(result) {
       if (hintEl) hintEl.style.display = 'none';
       const closeBtn = document.getElementById('stage-close-btn');
       if (closeBtn) closeBtn.style.display = 'flex';
+      const collectionLink = document.getElementById('multi-collection-link');
+      if (collectionLink) collectionLink.style.display = 'inline-block';
     });
     footer.insertBefore(openAllBtn, footer.firstChild);
   }
@@ -757,10 +766,11 @@ function showMultiGachaAnimation100(result) {
       </div>
     `).join('');
 
-  // 高レア（A賞・B賞）カード抽出
-  const rareCards = result.cards
-    .map(r => r.card)
-    .filter(c => c.rarity === 'A賞' || c.rarity === 'B賞');
+  // 高レア（A賞・B賞）カード抽出（user_card_idも保持）
+  const rareResults = result.cards
+    .filter(r => r.card.rarity === 'A賞' || r.card.rarity === 'B賞');
+  const rareCards = rareResults.map(r => r.card);
+  const rareUserCardIds = rareResults.map(r => r.user_card_id || null);
 
   // レア演出HTML（A賞・B賞のみ）
   const rareHighlightHTML = rareCards.length > 0
@@ -774,7 +784,7 @@ function showMultiGachaAnimation100(result) {
                 <div class="card-flip-inner">
                   <div class="card-face card-back"></div>
                   <div class="card-face card-front" style="padding:8px; font-size:0.7rem;">
-                    ${buildCardFrontHTML(card)}
+                    ${buildCardFrontHTML(card, rareUserCardIds[i])}
                   </div>
                 </div>
               </div>
@@ -837,6 +847,9 @@ function showMultiGachaAnimation100(result) {
       <button class="btn btn-gold" onclick="closeGachaStage()" style="margin-top: 16px; padding: 12px 32px; font-size: 1rem;">
         閉じる
       </button>
+      <a href="/frontend/collection.html" style="display:block; margin-top: 10px; font-size: 0.85rem; color: var(--accent-gold); text-decoration: none; text-align: center;">
+        コレクションで変換・発送申請
+      </a>
     </div>
   `;
 
@@ -877,12 +890,206 @@ function toggleAllResults() {
   }
 }
 
+// ===== ガチャ結果画面：コイン変換・発送申請 =====
+
+/** ガチャ結果用：コイン変換確認ダイアログを開く */
+function openGachaConvertModal(userCardId, cardName, rarity, coinValue) {
+  const user = getUser();
+  if (!user) {
+    alert('ログインが必要です');
+    return;
+  }
+  if (!confirm(`「${cardName}（${rarity}）」を ${coinValue} コインに変換しますか？\nこの操作は取り消せません。`)) return;
+  _submitGachaConvert(userCardId, coinValue);
+}
+
+async function _submitGachaConvert(userCardId, coinValue) {
+  try {
+    const res = await apiPost('/collection/convert', { user_card_id: userCardId, count: 1 });
+    updateCoinBalance(res.new_balance);
+    alert(res.message);
+    // 変換済みのボタンを無効化
+    const btn = document.querySelector(`[data-gacha-convert="${userCardId}"]`);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '変換済み';
+      btn.style.opacity = '0.5';
+      // 発送申請ボタンも無効化
+      const shipBtn = document.querySelector(`[data-gacha-ship="${userCardId}"]`);
+      if (shipBtn) { shipBtn.disabled = true; shipBtn.style.opacity = '0.5'; }
+    }
+  } catch (err) {
+    alert(`変換に失敗しました: ${err.message}`);
+  }
+}
+
+/** ガチャ結果用：発送申請フローを開始 */
+async function openGachaShipModal(userCardId, cardName, rarity) {
+  const user = getUser();
+  if (!user) {
+    alert('ログインが必要です');
+    return;
+  }
+
+  // 発送申請ダイアログを表示（既存のモーダルを流用するか、インラインで入力）
+  // モーダルをbodyに動的挿入
+  let modal = document.getElementById('gacha-ship-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'gacha-ship-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; padding:16px;';
+    modal.innerHTML = `
+      <div style="background:var(--card-bg,#1e1b2e); border:1px solid var(--border-color,#3a3a5c); border-radius:12px; padding:28px 24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto;">
+        <h3 id="gacha-ship-modal-title" style="margin:0 0 16px; color:var(--text-primary); font-size:1.1rem;"></h3>
+        <div id="gacha-ship-modal-alert" class="alert"></div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">お名前 <span style="color:var(--error)">*</span></label>
+          <input type="text" id="gs-name" class="form-input" placeholder="山田 太郎" style="font-size:16px;">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">郵便番号 <span style="color:var(--error)">*</span></label>
+          <input type="text" id="gs-postal" class="form-input" placeholder="1234567" style="font-size:16px;">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">都道府県 <span style="color:var(--error)">*</span></label>
+          <select id="gs-prefecture" class="form-input" style="font-size:16px;">
+            <option value="">選択してください</option>
+            ${['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'].map(p=>`<option value="${p}">${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">市区町村 <span style="color:var(--error)">*</span></label>
+          <input type="text" id="gs-city" class="form-input" placeholder="渋谷区" style="font-size:16px;">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">番地 <span style="color:var(--error)">*</span></label>
+          <input type="text" id="gs-address" class="form-input" placeholder="1-2-3" style="font-size:16px;">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">建物名・部屋番号</label>
+          <input type="text" id="gs-building" class="form-input" placeholder="○○マンション101" style="font-size:16px;">
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label">電話番号 <span style="color:var(--error)">*</span></label>
+          <input type="tel" id="gs-phone" class="form-input" placeholder="09012345678" style="font-size:16px;">
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button onclick="closeGachaShipModal()" class="btn btn-outline" style="padding:10px 20px;">キャンセル</button>
+          <button id="gs-submit-btn" onclick="submitGachaShipRequest()" class="btn btn-primary" style="padding:10px 20px;">申請する</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // タイトルをセット
+  document.getElementById('gacha-ship-modal-title').textContent = `発送申請：${cardName}（${rarity}）`;
+  document.getElementById('gacha-ship-modal-alert').className = 'alert';
+
+  // userCardIdをモーダルに記憶
+  modal.dataset.userCardId = userCardId;
+
+  // 保存済み住所を自動入力
+  try {
+    const addr = await apiGet('/collection/address');
+    if (addr) {
+      document.getElementById('gs-name').value = addr.name || '';
+      document.getElementById('gs-postal').value = addr.postal_code || '';
+      document.getElementById('gs-prefecture').value = addr.prefecture || '';
+      document.getElementById('gs-city').value = addr.city || '';
+      document.getElementById('gs-address').value = addr.address || '';
+      document.getElementById('gs-building').value = addr.building || '';
+      document.getElementById('gs-phone').value = addr.phone || '';
+    }
+  } catch (e) { /* 無視 */ }
+
+  modal.style.display = 'flex';
+}
+
+function closeGachaShipModal() {
+  const modal = document.getElementById('gacha-ship-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitGachaShipRequest() {
+  const modal = document.getElementById('gacha-ship-modal');
+  if (!modal) return;
+  const userCardId = parseInt(modal.dataset.userCardId, 10);
+
+  const name = document.getElementById('gs-name').value.trim();
+  const postal = document.getElementById('gs-postal').value.trim();
+  const prefecture = document.getElementById('gs-prefecture').value;
+  const city = document.getElementById('gs-city').value.trim();
+  const addr = document.getElementById('gs-address').value.trim();
+  const building = document.getElementById('gs-building').value.trim();
+  const phone = document.getElementById('gs-phone').value.trim();
+
+  if (!name || !postal || !prefecture || !city || !addr || !phone) {
+    showAlert('gacha-ship-modal-alert', '必須項目をすべて入力してください', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('gs-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '申請中...'; }
+
+  try {
+    const savedAddr = await apiPost('/collection/address', {
+      name, postal_code: postal, prefecture, city,
+      address: addr, building: building || null, phone
+    });
+    const res = await apiPost('/collection/ship', {
+      user_card_id: userCardId,
+      address_id: savedAddr.id,
+      count: 1
+    });
+    closeGachaShipModal();
+    alert(res.message);
+    // 申請済みのボタンを無効化
+    const shipBtn = document.querySelector(`[data-gacha-ship="${userCardId}"]`);
+    if (shipBtn) {
+      shipBtn.disabled = true;
+      shipBtn.textContent = '申請済み';
+      shipBtn.style.opacity = '0.5';
+      const convertBtn = document.querySelector(`[data-gacha-convert="${userCardId}"]`);
+      if (convertBtn) { convertBtn.disabled = true; convertBtn.style.opacity = '0.5'; }
+    }
+  } catch (err) {
+    showAlert('gacha-ship-modal-alert', `申請に失敗しました: ${err.message}`, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '申請する'; }
+  }
+}
+
+/**
+ * カードアクションボタンHTMLを生成する（コイン変換・発送申請）
+ * ログイン済みのときのみ表示する
+ */
+function buildCardActionButtons(userCardId, cardName, rarity, coinValue) {
+  if (!getToken() || !userCardId) return '';
+  const escapedName = cardName.replace(/'/g, "\\'");
+  return `
+    <div class="gacha-card-actions" style="display:flex; gap:6px; margin-top:8px; flex-shrink:0;">
+      <button
+        class="btn btn-primary gacha-action-btn"
+        data-gacha-convert="${userCardId}"
+        onclick="openGachaConvertModal(${userCardId}, '${escapedName}', '${rarity}', ${coinValue}); event.stopPropagation();"
+        style="flex:1; padding:6px 4px; font-size:0.72rem; min-width:0;"
+      >コイン変換</button>
+      <button
+        class="btn btn-outline gacha-action-btn"
+        data-gacha-ship="${userCardId}"
+        onclick="openGachaShipModal(${userCardId}, '${escapedName}', '${rarity}'); event.stopPropagation();"
+        style="flex:1; padding:6px 4px; font-size:0.72rem; min-width:0;"
+      >発送申請</button>
+    </div>
+  `;
+}
+
 /**
  * カード表面のHTMLを生成する
  * image_urlがある場合: 画像をカード面積の約80%に大きく表示し、名前・コインは下部に小さくまとめる
  * image_urlがない場合: 従来どおり絵文字＋カード名＋説明を表示
  */
-function buildCardFrontHTML(card) {
+function buildCardFrontHTML(card, userCardId) {
   // 賞ごとのカラーマッピング
   const rarityColors = {
     'A賞': '#ffd700',
@@ -909,6 +1116,9 @@ function buildCardFrontHTML(card) {
   const defaultCoinValues = { 'A賞': 1000, 'B賞': 300, 'C賞': 100, 'D賞': 30, 'E賞': 10 };
   const coinValue = card.coin_value != null ? card.coin_value : (defaultCoinValues[card.rarity] || 10);
 
+  // アクションボタン（コイン変換・発送申請）
+  const actionButtons = buildCardActionButtons(userCardId, card.name, card.rarity, coinValue);
+
   if (card.image_url) {
     // --- 画像優先レイアウト ---
     // カードイラストを80%の高さで大きく表示し、名前・コインは下部に小さくまとめる
@@ -923,6 +1133,7 @@ function buildCardFrontHTML(card) {
         <p class="card-name card-name-small" style="color: ${color};">${card.name}</p>
         <p class="gacha-card-coin gacha-card-coin-compact">🪙 ${coinValue}コイン</p>
       </div>
+      ${actionButtons}
     `;
   }
 
@@ -939,6 +1150,7 @@ function buildCardFrontHTML(card) {
       <p style="font-size: 0.8rem; color: var(--text-secondary);">${card.description || ''}</p>
       <p class="gacha-card-coin">🪙 ${coinValue}コイン</p>
     </div>
+    ${actionButtons}
   `;
 }
 

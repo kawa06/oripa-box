@@ -234,20 +234,24 @@ def draw_gacha(
 
     if existing_uc:
         existing_uc.count += 1
+        user_card_record = existing_uc
     else:
-        db.add(models.UserCard(
+        user_card_record = models.UserCard(
             user_id=current_user.id,
             card_id=drawn_card.id,
             count=1
-        ))
+        )
+        db.add(user_card_record)
 
     db.commit()
     db.refresh(current_user)
     db.refresh(pack)
     db.refresh(pity)
+    db.refresh(user_card_record)
 
     return schemas.GachaResultResponse(
         card=drawn_card,
+        user_card_id=user_card_record.id,
         coins_spent=pack.price_coins,
         remaining_balance=current_user.coin_balance,
         pack_remaining_stock=pack.stock,
@@ -345,12 +349,16 @@ def draw_gacha_multi(
         ).first()
         if existing_uc:
             existing_uc.count += 1
+            uc_id = existing_uc.id
         else:
-            db.add(models.UserCard(
+            new_uc = models.UserCard(
                 user_id=current_user.id,
                 card_id=drawn_card.id,
                 count=1
-            ))
+            )
+            db.add(new_uc)
+            db.flush()  # IDを取得するためflush
+            uc_id = new_uc.id
 
         # サマリー集計
         rarity_summary[drawn_card.rarity] = rarity_summary.get(drawn_card.rarity, 0) + 1
@@ -359,6 +367,7 @@ def draw_gacha_multi(
         results.append({
             "card": drawn_card,
             "pity_triggered": pity_triggered,
+            "user_card_id": uc_id,
         })
 
     # コインをまとめて消費
@@ -387,6 +396,7 @@ def draw_gacha_multi(
     card_responses = [
         schemas.GachaResultResponse(
             card=r["card"],
+            user_card_id=r["user_card_id"],
             coins_spent=pack.price_coins,
             remaining_balance=current_user.coin_balance,
             pack_remaining_stock=pack.stock,

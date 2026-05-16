@@ -108,6 +108,7 @@ class GachaRequest(BaseModel):
 class GachaResultResponse(BaseModel):
     """ガチャ結果レスポンス（1回引き）"""
     card: CardResponse
+    user_card_id: Optional[int] = None  # UserCard.id（コイン変換・発送申請に必要）
     coins_spent: int
     remaining_balance: int
     pack_remaining_stock: int
