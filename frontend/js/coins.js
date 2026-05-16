@@ -98,7 +98,7 @@ async function loadCoinPacks() {
         <div class="coin-pack-card" id="coin-pack-${pack.id}"
              onclick="selectCoinPack('${pack.id}', this)">
           ${index > 0 ? `<div class="value-badge">${discountPercent}% お得</div>` : ''}
-          <div class="coin-amount">🪙 ${pack.coins.toLocaleString()}</div>
+          <div class="coin-amount"><img src="/images/coin.png" class="coin-icon"> ${pack.coins.toLocaleString()}</div>
           <div class="coin-price">¥${pack.price_jpy.toLocaleString()}</div>
           <div style="font-size: 0.85rem; color: var(--text-secondary);">
             1コイン ≈ ¥${valuePerCoin.toFixed(1)}
@@ -215,7 +215,7 @@ async function loadTransactionHistory() {
                   font-weight: 700;
                   color: ${isPositive ? 'var(--success)' : 'var(--error)'};
                 ">
-                  ${isPositive ? '+' : ''}${tx.amount} 🪙
+                  ${isPositive ? '+' : ''}${tx.amount} <img src="/images/coin.png" class="coin-icon">
                 </div>
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">
                   ${formatDateTime(tx.created_at)}

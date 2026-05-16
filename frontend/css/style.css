@@ -122,8 +122,22 @@ body {
 }
 
 .coin-display::before {
-  content: 'ðª';
-  font-size: 1rem;
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-image: url('/images/coin.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+
+.coin-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 /* ===== ã¡ã¤ã³ã³ã³ãã³ã ===== */

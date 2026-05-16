@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -154,7 +154,7 @@
               ${prizePreviewHTML}
               ${directBtnsHTML}
               <div class="pack-footer">
-                <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
+                <span class="price-tag"><img src="/images/coin.png" class="coin-icon"> ${pack.price_coins}コイン</span>
                 ${pack.stock > 0
                   ? `<a href="/frontend/gacha.html?pack=${pack.id}" class="btn btn-primary" onclick="event.stopPropagation()">詳細</a>`
                   : `<button class="btn btn-outline" disabled>売り切れ</button>`

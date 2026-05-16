@@ -96,7 +96,7 @@ async function loadPacks() {
           </div>
           ${prizePreviewHTML}
           <div class="pack-footer">
-            <span class="price-tag">🪙 ${pack.price_coins}コイン</span>
+            <span class="price-tag"><img src="/images/coin.png" class="coin-icon"> ${pack.price_coins}コイン</span>
             ${pack.stock > 0
               ? `<button class="btn btn-primary" onclick="selectPack(${pack.id}, this.closest('.pack-card')); event.stopPropagation();">詳細を見る</button>`
               : `<button class="btn btn-outline" disabled>売り切れ</button>`
@@ -148,7 +148,7 @@ function showPackDetail(pack) {
   prizesContainer.innerHTML = buildDetailPrizeSections(pack.cards || [], pack.max_stock);
 
   // 価格・在庫情報
-  document.getElementById('pack-detail-price').textContent = `🪙 ${pack.price_coins}コイン`;
+  document.getElementById('pack-detail-price').textContent = `<img src="/images/coin.png" class="coin-icon"> ${pack.price_coins}コイン`;
   const stockPercent = (pack.stock / pack.max_stock) * 100;
   const isLow = stockPercent < 20;
   document.getElementById('pack-detail-stock').textContent =
@@ -1131,7 +1131,7 @@ function buildCardFrontHTML(card, userCardId) {
           ${card.rarity}
         </span>
         <p class="card-name card-name-small" style="color: ${color};">${card.name}</p>
-        <p class="gacha-card-coin gacha-card-coin-compact">🪙 ${coinValue}コイン</p>
+        <p class="gacha-card-coin gacha-card-coin-compact"><img src="/images/coin.png" class="coin-icon"> ${coinValue}コイン</p>
       </div>
       ${actionButtons}
     `;
@@ -1148,7 +1148,7 @@ function buildCardFrontHTML(card, userCardId) {
       </span>
       <p class="card-name" style="color: ${color};">${card.name}</p>
       <p style="font-size: 0.8rem; color: var(--text-secondary);">${card.description || ''}</p>
-      <p class="gacha-card-coin">🪙 ${coinValue}コイン</p>
+      <p class="gacha-card-coin"><img src="/images/coin.png" class="coin-icon"> ${coinValue}コイン</p>
     </div>
     ${actionButtons}
   `;
@@ -1221,7 +1221,7 @@ async function loadGachaHistory() {
               <span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: 8px;">${item.pack_name}</span>
             </div>
             <span style="font-size: 0.8rem; color: var(--text-secondary);">${formatDate(item.created_at)}</span>
-            <span style="color: var(--accent-gold); font-size: 0.85rem;">-${item.coins_spent}🪙</span>
+            <span style="color: var(--accent-gold); font-size: 0.85rem;">-${item.coins_spent}<img src="/images/coin.png" class="coin-icon"></span>
           </div>
         `).join('')}
       </div>
